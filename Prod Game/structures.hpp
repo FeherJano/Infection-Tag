@@ -3,51 +3,49 @@
 
 #include <vector>
 
-// Definíciók a különböző méretű objektumstruktúrákhoz
-
-// Kicsi alakzatok (5x5 mátrix)
+// small objects (5x5 mátrix)
 const std::vector<std::vector<std::vector<int>>> SMALL_OBJECTS = {
-    // T alakzat
+    // T shape
    {{1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1},
     {0, 0, 1, 0, 0},
     {0, 0, 1, 0, 0},
     {0, 0, 1, 0, 0}},
 
-    // L alakzat
+    // L shape
    {{1, 1, 0, 0, 0},
     {1, 1, 0, 0, 0},
     {1, 1, 0, 0, 0},
     {1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1}},
 
-    // Z alakzat
+    // Z shape
    {{1, 1, 1, 0, 0},
     {1, 1, 1, 0, 0},
     {0, 0, 1, 0, 0},
     {0, 0, 1, 1, 1},
     {0, 0, 1, 1, 1}},
 
-    // Négyzet
+    // square
    {{1, 1, 1},
     {1, 1, 1},
     {1, 1, 1}},
 
-    // Téglalap
+    // rect
    {{1, 1, 1},
     {1, 1, 1},
     {1, 1, 1},
     {1, 1, 1},
     {1, 1, 1}},
 
-    // Egyedi alakzat (5x5)
+    // shack (5x5)
    {{1, 0, 1, 1, 1},
     {1, 0, 0, 0, 1},
     {1, 0, 0, 0, 1},
     {1, 0, 0, 0, 1},
     {1, 1, 1, 0, 1}},
 
-    // Kereszt
+    // Cross
    {{0, 0, 1, 0, 0},
     {0, 0, 1, 0, 0},
     {1, 1, 1, 1, 1},
@@ -55,9 +53,9 @@ const std::vector<std::vector<std::vector<int>>> SMALL_OBJECTS = {
     {0, 0, 1, 0, 0}}
 };
 
-// Nagy alakzatok (10x10 mátrix)
+// large objects (10x10 mátrix)
 const std::vector<std::vector<std::vector<int>>> LARGE_OBJECTS = {
-    // Téglalap
+    // house
     {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
      {0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
      {0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -118,7 +116,7 @@ const std::vector<std::vector<std::vector<int>>> MAIN_BUILDINGS = {
 }
 };
 
-// Funkciók forgatáshoz (90 fokos elforgatás jobbra)
+// Rotate 90 degrees to the right
 std::vector<std::vector<int>> rotateRight(const std::vector<std::vector<int>>& structure) {
     size_t n = structure.size();
     size_t m = structure[0].size();
