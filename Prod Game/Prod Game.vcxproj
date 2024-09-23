@@ -137,11 +137,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="common.hpp" />
+    <ClCompile Include="game_constants.hpp" />
+    <ClCompile Include="map.cpp" />
+    <ClCompile Include="player.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="task.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="map.hpp" />
+    <ClInclude Include="player.hpp" />
     <ClInclude Include="structures.hpp" />
+    <ClInclude Include="task.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
