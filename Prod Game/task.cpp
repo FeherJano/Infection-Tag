@@ -66,6 +66,13 @@ bool isSurvivorOnTask(const Survivor& survivor, const Task& task) {
             survivor.position.y >= task.position.y && survivor.position.y <= task.position.y + CELL_SIZE * 3);
 }
 
-bool isTaskVisibleToSurvivor(const Task& task, const Survivor& survivor, const std::vector<std::vector<int>>& maze) {
-    return isCellVisible(survivor.position, task.position.x / CELL_SIZE, task.position.y / CELL_SIZE, SURVIVOR_VIEW_RADIUS, maze);
+bool isTaskVisibleToAnySurvivor(const Task& task, const std::vector<Survivor>& survivors, const std::vector<std::vector<int>>& maze) {
+    bool visible = false;
+    for (auto& survivor : survivors) {
+        if (isCellVisible(survivor.position, task.position.x / CELL_SIZE, task.position.y / CELL_SIZE, SURVIVOR_VIEW_RADIUS, maze)) {
+            visible = true;
+            break;
+        }
+    }
+    return visible;
 }

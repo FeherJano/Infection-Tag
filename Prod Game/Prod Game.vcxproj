@@ -71,12 +71,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\Jano\source\repos\Prod Game\dependencies\SFML\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Jano\source\repos\Prod Game\dependencies\SFML\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\223118453.HCAD\source\repos\FeherJano\DBD-clone\dependencies\SFML\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\223118453.HCAD\source\repos\FeherJano\DBD-clone\dependencies\SFML\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\Jano\source\repos\Prod Game\dependencies\SFML\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Jano\source\repos\Prod Game\dependencies\SFML\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\223118453.HCAD\source\repos\FeherJano\DBD-clone\dependencies\SFML\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\223118453.HCAD\source\repos\FeherJano\DBD-clone\dependencies\SFML\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

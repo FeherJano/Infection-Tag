@@ -15,7 +15,7 @@ class Survivor;
 
 bool isBlocked(int gridX, int gridY, const std::vector<std::vector<int>>& maze);
 void placeObjects(std::vector<std::vector<int>>& maze);
-void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& maze, const Killer& killer, const Survivor& survivor, bool showFullMap);
+void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& maze, const Killer& killer, const std::vector<Survivor>& survivors, bool showFullMap);
 bool checkCollision(sf::Vector2f position, float playerSize, const std::vector<std::vector<int>>& maze);
 bool canPlaceObject(const std::vector<vector<int>>& maze, int x, int y, int width, int height);
 bool isCellVisible(sf::Vector2f playerPos, int gridX, int gridY, float viewRadius, const vector<vector<int>>& maze);

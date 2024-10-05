@@ -20,6 +20,6 @@ public:
 
 void placeTasks(std::vector<Task>& tasks, std::vector<std::vector<int>>& maze, int numSurvivors);
 bool isSurvivorOnTask(const Survivor& survivor, const Task& task);
-bool isTaskVisibleToSurvivor(const Task& task, const Survivor& survivor, const std::vector<std::vector<int>>& maze);
+bool isTaskVisibleToAnySurvivor(const Task& task, const std::vector<Survivor>& survivors, const std::vector<std::vector<int>>& maze);
 
 #endif
