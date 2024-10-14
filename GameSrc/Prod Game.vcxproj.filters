@@ -15,33 +15,33 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="player.cpp">
+    <ClCompile Include="src\player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="task.cpp">
+    <ClCompile Include="src\task.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="game_constants.hpp">
+    <ClCompile Include="src\game_constants.hpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="map.cpp">
+    <ClCompile Include="src\map.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="player.hpp">
+    <ClInclude Include="src\player.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="task.hpp">
+    <ClInclude Include="src\task.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="structures.hpp">
+    <ClInclude Include="src\structures.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="map.hpp">
+    <ClInclude Include="src\map.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

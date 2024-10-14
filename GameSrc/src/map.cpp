@@ -55,7 +55,7 @@ void placeObjects(std::vector<std::vector<int>>& maze) {
         hx = mainBlockX + rand() % (blockWidth - mainWidth);
         hy = mainBlockY + rand() % (blockHeight - mainHeight);
     } while (!canPlaceObject(maze, hx, hy, mainWidth, mainHeight));
-
+    
     for (int r = 0; r < mainHeight; ++r) {
         for (int c = 0; c < mainWidth; ++c) {
             if (mainBuilding[r][c] == 1) {

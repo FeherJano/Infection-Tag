@@ -21,9 +21,10 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{aa692980-d961-4642-bb84-fbeff397aaae}</ProjectGuid>
+    <ProjectGuid>{F2F859EF-22B1-4118-8F1C-480819901DA8}</ProjectGuid>
     <RootNamespace>ProdGame</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>ProdGame</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -151,17 +152,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="game_constants.hpp" />
-    <ClCompile Include="map.cpp" />
-    <ClCompile Include="player.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="task.cpp" />
+    <ClCompile Include="src\game_constants.hpp" />
+    <ClCompile Include="src\map.cpp" />
+    <ClCompile Include="src\player.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\task.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="map.hpp" />
-    <ClInclude Include="player.hpp" />
-    <ClInclude Include="structures.hpp" />
-    <ClInclude Include="task.hpp" />
+    <ClInclude Include="src\map.hpp" />
+    <ClInclude Include="src\player.hpp" />
+    <ClInclude Include="src\structures.hpp" />
+    <ClInclude Include="src\task.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
