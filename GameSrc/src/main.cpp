@@ -16,12 +16,17 @@ int main() {
 
     // Add tasks
     std::vector<Task> tasks;
-    int numSurvivors = 1; // Example with 1 survivor
+    int numSurvivors = 2; // Example with 1 survivor
     placeTasks(tasks, maze, numSurvivors);
 
     // Add players
-    Killer killer(1.0f * CELL_SIZE, 1.0f * CELL_SIZE);
-    Survivor survivor((WIDTH - 2.0f) * CELL_SIZE, (HEIGHT - 2.0f) * CELL_SIZE);
+    Killer killer(1.0f * CELL_SIZE, 1.0f * CELL_SIZE,
+        { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+    std::vector<Survivor> survivors;
+    survivors.emplace_back(Survivor((WIDTH - 2.0f) * CELL_SIZE, (HEIGHT - 2.0f) * CELL_SIZE,
+        { sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Left, sf::Keyboard::Right }));
+    survivors.emplace_back(Survivor((WIDTH - 2.0f) * CELL_SIZE, (HEIGHT - 2.0f) * CELL_SIZE,
+        { sf::Keyboard::I, sf::Keyboard::K, sf::Keyboard::J, sf::Keyboard::L }));
 
     sf::RenderWindow window(sf::VideoMode(WIDTH * CELL_SIZE, HEIGHT * CELL_SIZE), "Asymmetric Multiplayer Game");
 
@@ -43,7 +48,9 @@ int main() {
 
             // Handle "H" key press
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::H) {
-                survivor.healthState = HEALTHY;
+                for (auto& survivor : survivors) {
+                    survivor.healthState = HEALTHY;
+                }
             }
 
             // Handle "Q" key press
@@ -54,50 +61,48 @@ int main() {
 
         float deltaTime = clock.restart().asSeconds();
 
-        float dirX = 0.0f, dirY = 0.0f;
+        killer.move(deltaTime, maze);
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) dirY -= 1.0f;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) dirY += 1.0f;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) dirX -= 1.0f;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) dirX += 1.0f;
-
-        killer.move(dirX, dirY, deltaTime, maze);
-
-        dirX = 0.0f;
-        dirY = 0.0f;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) dirY -= 1.0f;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) dirY += 1.0f;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) dirX -= 1.0f;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) dirX += 1.0f;
-
-        survivor.move(dirX, dirY, deltaTime, maze);
+        for (auto& survivor : survivors) {
+            survivor.move(deltaTime, maze);
+        }
 
         // Update tasks and progress
         for (Task& task : tasks) {
-            int numSurvivorsOnTask = isSurvivorOnTask(survivor, task) ? 1 : 0;
+            int numSurvivorsOnTask = 0;
+            for (auto& survivor : survivors) {
+                numSurvivorsOnTask += isSurvivorOnTask(survivor, task) ? 1 : 0;
+            }
             task.update(deltaTime, numSurvivorsOnTask);
         }
 
         // Update players
         killer.update(deltaTime);
-        survivor.update(deltaTime);
-
-        // Check collision between killer and survivor
-        if (checkCollisionBetween(killer, survivor) && killer.canHit()) {
-            killer.hit(survivor); // Hit survivor if not in DYING or DEAD state
+        for (auto& survivor : survivors) {
+            survivor.update(deltaTime);
         }
 
+        // Check collision between killer and survivor
+        for (auto& survivor : survivors) {
+            if (checkCollisionForKiller(killer, survivor) && killer.canHit()) {
+                killer.hit(survivor); // Hit survivor if not in DYING or DEAD state
+            }
+        }
+        checkCollisionBetweenSurvivors(survivors);
+
         window.clear(sf::Color::Black);
-        renderMap(window, maze, killer, survivor, showFullMap);
+        renderMap(window, maze, killer, survivors, showFullMap);
 
         
         // Render tasks (only if visible to survivor or full map view)
         for (Task& task : tasks) {
-            bool isVisible = isTaskVisibleToSurvivor(task, survivor, maze);
+            bool isVisible = isTaskVisibleToAnySurvivor(task, survivors, maze);
             task.render(window, isVisible, showFullMap);
         }
 
-        survivor.render(window);
+        for (auto& survivor : survivors) {
+            survivor.render(window);
+        }
         killer.render(window);
 
         window.display();

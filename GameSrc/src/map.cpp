@@ -123,7 +123,7 @@ void placeObjects(std::vector<std::vector<int>>& maze) {
     }
 }
 
-void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& maze, const Killer& killer, const Survivor& survivor, bool showFullMap) {
+void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& maze, const Killer& killer, const std::vector<Survivor>& survivors, bool showFullMap) {
     // A térkép celláinak megjelenítése
     for (int i = 0; i < HEIGHT; i++) {
         for (int j = 0; j < WIDTH; j++) {
@@ -141,12 +141,19 @@ void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& ma
             }
             else {
                 // Fog of war (köd-effekt) alkalmazása
-                if (isCellVisible(survivor.position, j, i, SURVIVOR_VIEW_RADIUS, maze)) {
-                    if (maze[i][j] == 1) {
-                        cell.setFillColor(sf::Color(128, 128, 128)); // Fal
+                bool visibleBySurvivors = false;
+                for (auto& survivor : survivors) {
+                    if (isCellVisible(survivor.position, j, i, SURVIVOR_VIEW_RADIUS, maze)) {
+                        visibleBySurvivors = true;
+                        break;
+                    }
+                }
+                if (visibleBySurvivors) {
+                    if (maze[i][j] == 0) {
+                        visibleBySurvivors = true; cell.setFillColor(sf::Color::Black); // Üres hely
                     }
                     else {
-                        cell.setFillColor(sf::Color::Black); // Üres hely
+                        cell.setFillColor(sf::Color(128, 128, 128)); // Fal
                     }
                 }
                 else if (isCellInKillerSight(killer, j, i, maze)) {

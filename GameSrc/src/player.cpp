@@ -2,10 +2,38 @@
 #include "map.hpp"
 #include "game_constants.hpp"
 
+namespace {
+    enum MovementKeyIndex {
+        UP_INDEX,
+        DOWN_INDEX,
+        LEFT_INDEX,
+        RIGHT_INDEX
+    };
+}
 
-Player::Player(float startX, float startY, float speed) : position(startX, startY), lastDirection(1.0f, 0.0f), moveSpeed(speed) {}
+Player::Player(float startX,
+               float startY,
+               float speed,
+               std::array<sf::Keyboard::Key, 4> movementKeys) :
+    position(startX, startY),
+    lastDirection(1.0f, 0.0f),
+    moveSpeed(speed),
+    movementKeys(movementKeys)
+{}
 
-void Player::move(float dirX, float dirY, float deltaTime, const std::vector<std::vector<int>>& maze) {
+void Player::move(float deltaTime, const std::vector<std::vector<int>>& maze) {
+    float dirX = 0.0f;
+    float dirY = 0.0f;
+
+    if (sf::Keyboard::isKeyPressed(movementKeys[UP_INDEX]))
+        dirY -= 1.0f;
+    if (sf::Keyboard::isKeyPressed(movementKeys[DOWN_INDEX]))
+        dirY += 1.0f;
+    if (sf::Keyboard::isKeyPressed(movementKeys[LEFT_INDEX]))
+        dirX -= 1.0f;
+    if (sf::Keyboard::isKeyPressed(movementKeys[RIGHT_INDEX]))
+        dirX += 1.0f;
+    
     float length = sqrt(dirX * dirX + dirY * dirY);
     if (length != 0) {
         dirX /= length;
@@ -38,7 +66,12 @@ void Player::update(float deltaTime) {
     }
 }
 
-Survivor::Survivor(float startX, float startY) : Player(startX, startY, SURVIVOR_MOVE_SPEED), healthState(HEALTHY) {}
+Survivor::Survivor(float startX,
+                   float startY,
+                   std::array<sf::Keyboard::Key, 4> movementKeys) :
+    Player(startX, startY, SURVIVOR_MOVE_SPEED, movementKeys),
+    healthState(HEALTHY)
+{}
 
 
 void Survivor::getHit() {
@@ -50,6 +83,10 @@ void Survivor::getHit() {
         healthState = DYING;
         dyingTimer = maxDyingTime;  // Set dying timer
     }
+}
+
+void Survivor::heal() {
+
 }
 
 void Survivor::update(float deltaTime)  {
@@ -155,7 +192,11 @@ void Survivor::render(sf::RenderWindow& window) {
     }
 }
 
-Killer::Killer(float startX, float startY) : Player(startX, startY, KILLER_MOVE_SPEED) {}
+Killer::Killer(float startX,
+               float startY,
+               std::array<sf::Keyboard::Key, 4> movementKeys) :
+    Player(startX, startY, KILLER_MOVE_SPEED, movementKeys)
+{}
 
 bool Killer::canHit() {
     return hitCooldownTimer <= 0.0f;
@@ -187,12 +228,32 @@ void Killer::render(sf::RenderWindow& window) {
     window.draw(killerShape);
 }
 
-bool checkCollisionBetween(Killer& killer, Survivor& survivor) {
+bool checkCollisionForKiller(Killer& killer, Survivor& survivor) {
     if (survivor.healthState == DYING || survivor.healthState == DEAD) {
         return false; // No collision for DYING or DEAD survivors
     }
 
     float distance = sqrt(pow(killer.position.x - survivor.position.x, 2) + pow(killer.position.y - survivor.position.y, 2));
     return distance < CELL_SIZE; // Killer is close enough to the survivor
+}
+
+void checkCollisionBetweenSurvivors(std::vector<Survivor>& survivors) {
+    for (size_t i = 0; i < survivors.size(); ++i) {
+        auto& survivor = survivors[i];
+        if (survivor.healthState == DYING || survivor.healthState == INJURED) {
+            for (size_t j = 0; j < survivors.size(); ++j) {
+                if (i == j) {
+                    continue;
+                }
+                auto& survivor2 = survivors[j];
+                if (survivor2.healthState != DEAD) {
+                    float distance = sqrt(pow(survivor2.position.x - survivor.position.x, 2) + pow(survivor2.position.y - survivor.position.y, 2));
+                    if (distance < CELL_SIZE) {
+                        survivor.heal();
+                    }
+                }
+            }
+        }
+    }
 }
 
