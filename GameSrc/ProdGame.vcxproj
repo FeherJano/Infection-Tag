@@ -157,6 +157,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Server\server.cpp" />
     <ClCompile Include="src\task.cpp" />
+    <ClCompile Include="src\WindowApp\WindowApplication.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\map.hpp" />
@@ -165,6 +166,8 @@
     <ClInclude Include="src\structures.hpp" />
     <ClInclude Include="src\task.hpp" />
     <ClInclude Include="src\Utility\Exceptions.hpp" />
+    <ClInclude Include="src\WindowApp\AppState.hpp" />
+    <ClInclude Include="src\WindowApp\WindowApplication.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

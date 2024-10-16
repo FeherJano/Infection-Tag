@@ -1,17 +1,15 @@
 /*
-#include "SFML/Graphics.hpp"
+
 #include "player.hpp"
 #include "map.hpp"
 #include "task.hpp"
 */
-#include "Server/server.hpp"
-const unsigned short myPort = 8085;
+#include "WindowApp/WindowApplication.hpp"
 
+const unsigned width = 800, height = 800;
 int main() {
     
-    CatGameServer * server = new CatGameServer(8085);
-    server->ServerFunction();
-
-
+    WindowApplication game(width, height);
+    game.main();
     return 0;
 }
