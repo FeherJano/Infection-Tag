@@ -1,5 +1,6 @@
 #include "WindowApplication.hpp"
 #include <iostream>
+#include <thread>
 
 
 WindowApplication::WindowApplication(const unsigned width = 1024, const unsigned height = 768) : width(width), height(height), gameServer(nullptr) {
@@ -7,7 +8,8 @@ WindowApplication::WindowApplication(const unsigned width = 1024, const unsigned
 	currentState = appInit;
 	//TODO Make these magic numbers consistent and make the ui generation cleaner
 	uiElement* menuButton1 = new Button(sf::Vector2f(width/2 - 100, 100), sf::Vector2f(125, 75), "Play", 1);
-	uiElement* menuButton2 = new Button(sf::Vector2f(width / 2 - 100, 200), sf::Vector2f(125, 75), "Host",2);
+	uiElement* menuButton2 = new Button(sf::Vector2f(menuButton1->getPosition().x, menuButton1->getPosition().y + 100),
+		menuButton1->getSize(), "Host", menuButton1->getId()+1);
 	uiElements.push_back(menuButton1);
 	uiElements.push_back(menuButton2);
 }
@@ -22,8 +24,11 @@ WindowApplication::~WindowApplication() {
 
 
 void WindowApplication::startServer() {
+	if (this->gameServer != nullptr)return;
+
 	this->gameServer = new CatGameServer(8085);
-	this->gameServer->ServerFunction();
+	std::thread serverThread(&CatGameServer::ServerFunction, &(*gameServer));
+	serverThread.detach();
 
 }
 
