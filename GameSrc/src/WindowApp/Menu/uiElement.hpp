@@ -1,17 +1,18 @@
 #pragma once
 #include "SFML/Graphics.hpp"
-#include "../../Utility/logging.hpp"
 
 
 class uiElement {
+protected:
+    const sf::RenderWindow* mainWindow;
 private:
     sf::Vector2f position;
     sf::Vector2f size;
     uint16_t id;
-
+   
 public:
 
-    uiElement(sf::Vector2f pos, sf::Vector2f sz, uint16_t id) : position(pos), size(sz), id(id) {}
+    uiElement(const sf::RenderWindow * renderWindow,sf::Vector2f pos, sf::Vector2f sz, uint16_t id) : mainWindow(renderWindow), position(pos), size(sz), id(id) {}
 
     sf::Vector2f getPosition() const {
         return position;
@@ -40,7 +41,7 @@ public:
 
     }
 
-    static bool isMouseThere(const sf::Event::MouseButtonEvent& mousePos, const sf::Vector2f& p1, const sf::Vector2f& p2) {
+    static bool isMouseThere(const sf::Vector2i &mousePos, const sf::Vector2f& p1, const sf::Vector2f& p2) {
         return mousePos.x > p1.x && mousePos.y > p1.y &&
             mousePos.x < p2.x && mousePos.y < p2.y;
     }

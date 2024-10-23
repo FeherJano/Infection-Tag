@@ -2,11 +2,12 @@
 #include <list>
 #include "SFML/Graphics.hpp"
 #include "../Server/server.hpp"
+#include "../Client/Client.hpp"
 #include "AppState.hpp"
 #include "Menu/Button.hpp"
 
 
-const unsigned short myPort = 8085;
+const unsigned short myPort = 8088;
 
 class WindowApplication {
 protected:
@@ -14,7 +15,8 @@ protected:
 	sf::RenderWindow* mainWindow;
 
 	AppState currentState;
-	CatGameServer * gameServer;
+	std::unique_ptr<CatGameServer> gameServer;
+	std::unique_ptr<Client> player;
 	std::list<uiElement*> uiElements;
 
 public:
