@@ -1,9 +1,9 @@
-#include "WindowApplication.hpp"
+#include "WindowApp.hpp"
 #include <iostream>
 #include <thread>
 
 
-WindowApplication::WindowApplication(const unsigned width = 1024, const unsigned height = 768) : width(width), height(height), gameServer(nullptr), player(nullptr) {
+WindowApp::WindowApp(const unsigned width = 1024, const unsigned height = 768) : width(width), height(height), gameServer(nullptr), player(nullptr) {
 	mainWindow = new sf::RenderWindow(sf::VideoMode(width, height), "Freaking cats");
 	currentState = appInit;
 
@@ -16,22 +16,26 @@ WindowApplication::WindowApplication(const unsigned width = 1024, const unsigned
 }
 
 
-WindowApplication::~WindowApplication() {
+WindowApp::~WindowApp() {
 	mainWindow->close();
 	delete mainWindow;
 	uiElements.clear();
 }
 
 
-void WindowApplication::startServer() {
+void WindowApp::startServer() {
 	if (this->gameServer != nullptr)return;
 	this->gameServer = std::unique_ptr<CatGameServer>(new CatGameServer(myPort));
 	std::thread serverThread(&CatGameServer::ServerFunction, &(*gameServer));
 	serverThread.detach();
 } 
 
+void WindowApp::startClient() {
 
-void WindowApplication::processInput() {
+}
+
+
+void WindowApp::processInput() {
 	sf::Event ev;
 
 	while (mainWindow->pollEvent(ev)) {
@@ -62,7 +66,7 @@ void WindowApplication::processInput() {
 }
 
 
-void WindowApplication::renderElements() {
+void WindowApp::renderElements() {
 
 	if (gameServer != nullptr)
 		return;
@@ -73,7 +77,7 @@ void WindowApplication::renderElements() {
 }
 
 
-int WindowApplication::main() {
+int WindowApp::main() {
 
 	while (mainWindow->isOpen()) {
 		this->processInput();

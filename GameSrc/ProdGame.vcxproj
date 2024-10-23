@@ -164,7 +164,7 @@
     <ClCompile Include="src\Server\server.cpp" />
     <ClCompile Include="src\task.cpp" />
     <ClCompile Include="src\WindowApp\Menu\Button.cpp" />
-    <ClCompile Include="src\WindowApp\WindowApplication.cpp" />
+    <ClCompile Include="src\WindowApp\WindowApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Client\Client.hpp" />
@@ -178,7 +178,7 @@
     <ClInclude Include="src\WindowApp\AppState.hpp" />
     <ClInclude Include="src\WindowApp\Menu\Button.hpp" />
     <ClInclude Include="src\WindowApp\Menu\uiElement.hpp" />
-    <ClInclude Include="src\WindowApp\WindowApplication.hpp" />
+    <ClInclude Include="src\WindowApp\WindowApp.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

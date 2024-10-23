@@ -9,7 +9,7 @@
 
 const unsigned short myPort = 8088;
 
-class WindowApplication {
+class WindowApp {
 protected:
 	const unsigned width, height;
 	sf::RenderWindow* mainWindow;
@@ -20,10 +20,11 @@ protected:
 	std::list<uiElement*> uiElements;
 
 public:
-	WindowApplication(const unsigned width, const unsigned height);
-	~WindowApplication();
+	WindowApp(const unsigned width, const unsigned height);
+	~WindowApp();
 
 	void startServer();
+	void startClient();
 	void processInput();
 	void renderElements();
 	int main();
