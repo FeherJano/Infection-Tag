@@ -50,9 +50,7 @@ void Client::setConnTimeoutSec(unsigned short newTimeout) {
 }
 
 bool Client::msgToServer(sf::Packet &msg) {
-    if (getServer().NotReady) {
-        return false;
-    }
+
     short attempts = 0;
     while (attempts < Client::maxRetries) {
         if (getServer().send(msg) != sf::Socket::Partial) {

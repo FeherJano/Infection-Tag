@@ -8,6 +8,7 @@
 
 
 const unsigned short myPort = 8088;
+const std::string localhost = "localhost";
 
 class WindowApp {
 protected:
@@ -18,6 +19,7 @@ protected:
 	std::unique_ptr<CatGameServer> gameServer;
 	std::unique_ptr<Client> player;
 	std::list<uiElement*> uiElements;
+	void clientEcho();
 
 public:
 	WindowApp(const unsigned width, const unsigned height);

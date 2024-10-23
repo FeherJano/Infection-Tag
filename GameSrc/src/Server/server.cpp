@@ -2,9 +2,9 @@
 #include <iostream>
 #include <thread>
 #include "../Utility/logging.hpp"
+#include <sstream>
 
-
-const unsigned short CatGameServer::defaultPort = 8085;
+const unsigned short CatGameServer::defaultPort = 8088;
 
 
 unsigned short CatGameServer::bindToPort() {
@@ -22,6 +22,7 @@ void CatGameServer::listen() {
 		throw new std::exception("Error occurred during waiting to client connection!");
 	}
 	std::cout << "Accepted client " << std::endl;
+
 //	std::cout << "Accepted client no." << clients.size()<<'\n';
 
 
@@ -35,15 +36,24 @@ void CatGameServer::ServerFunction() {
 	{
 		sf::Packet response = sf::Packet();
 		auto status = client.receive(response);
-		std::cout << "Got message from client! " << response.getData();
-		if (status != sf::Socket::Done) {
-			std::cout << "Err happened while recieving: "<<status << std::endl;
-			continue;
+		switch (status) {
+		case sf::Socket::Disconnected:
+			log("Terminated connection! Closing thread..", loggingInfo);
+			return;
+			break;
+		case sf::Socket::Error:
+			log("Error occurred during recieving from client!", loggingErr);
+			break;
+		default:
+			break;
 		}
-
+		std::string msg;
+		response >> msg;
+		std::cout << "Got message from client! " << msg<<'\n';
+		
 		auto message = sf::Packet();
-		std::string msg = "Hello client";
-		message.append(&msg, sizeof(message));
+		msg = "Hello client";
+		message << msg;
 		client.send(message);
 	}
 
