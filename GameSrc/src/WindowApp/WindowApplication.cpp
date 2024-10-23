@@ -30,7 +30,7 @@ void WindowApplication::startServer() {
 	std::thread serverThread(&CatGameServer::ServerFunction, &(*gameServer));
 	serverThread.detach();
 
-}
+} 
 
 
 void WindowApplication::processInput() {

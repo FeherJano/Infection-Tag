@@ -3,15 +3,23 @@
 
 Button::Button(sf::Vector2f pos, sf::Vector2f size, std::string text, uint16_t id) : uiElement(pos, size, id), body(sf::RectangleShape(size)), label(sf::Text()), font(new sf::Font())
 {
-	if (!font->loadFromFile("./src/Utility/Fonts/Gerhaus-PK69E.ttf")) { // Use a valid path to a .ttf file
-		throw new std::exception("No loadable font found. Terminating...");
+	if (!font->loadFromFile("./src/Utility/Fonts/Raleway-Regular.ttf")) { // Use a valid path to a .ttf file
+		logErr(noSuitableFontException().what())
+		exit(err_Fatal);
 	}
-	label.setFont(*font);
-	label.setString(text);
+	try {
+		label.setFont(*font);
+		label.setString(text);
+	}
+	catch (std::exception e) {
+		logErr(e.what());
+		exit(err_Fatal);
+	}
+	
 	body.setPosition(pos);
 	sf::Vector2f labelPos = pos;
 	//centering the text
-	labelPos.x += size.x / 2 - (float) ((text.length()/2 ) * label.getCharacterSize());
+	labelPos.x += label.findCharacterPos(text.size() ).x / 2;
 	labelPos.y += size.y / 2 - (float) (label.getCharacterSize() / 2);
 	label.setPosition(labelPos);
 	body.setFillColor(sf::Color::Magenta);
