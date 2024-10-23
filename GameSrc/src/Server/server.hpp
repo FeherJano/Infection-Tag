@@ -2,6 +2,8 @@
 #include <SFML/Network.hpp>
 #include <vector>
 
+
+//TODO MAKE COMMUNICATION JSON BASED!!!!!
 class CatGameServer{
 private:
 	sf::TcpListener clientListener;

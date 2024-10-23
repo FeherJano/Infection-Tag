@@ -1,6 +1,8 @@
 #pragma once
 #include "SFML/Network.hpp"
 
+//TODO MAKE COMMUNICATION JSON BASED!!!!!
+
 class Client {
 	sf::TcpSocket Server;
 	sf::IpAddress serverAddress;
