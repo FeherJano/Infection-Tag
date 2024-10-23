@@ -1,5 +1,11 @@
 #include "server.hpp"
 #include <iostream>
+#include <thread>
+#include "../Utility/logging.hpp"
+
+
+const unsigned short CatGameServer::defaultPort = 8085;
+
 
 unsigned short CatGameServer::bindToPort() {
 	unsigned short port = this->listenerPort;
@@ -11,7 +17,7 @@ unsigned short CatGameServer::bindToPort() {
 
 
 void CatGameServer::listen() {
-
+	log("Server started listening on port: "<< this->listenerPort, loggingInfo);
 	if ( clientListener.accept( client ) != sf::Socket::Done) {
 		throw new std::exception("Error occurred during waiting to client connection!");
 	}
@@ -23,8 +29,8 @@ void CatGameServer::listen() {
 
 
 void CatGameServer::ServerFunction() {
-
-	listen();
+	std::thread ListenerThread(&CatGameServer::listen, &(*this));
+	ListenerThread.join();
 	while (true)
 	{
 		sf::Packet response = sf::Packet();

@@ -1,7 +1,6 @@
 #pragma once
 #include <SFML/Network.hpp>
 #include <vector>
-#include "../Utility/Exceptions.hpp"
 
 class CatGameServer{
 private:
@@ -14,7 +13,7 @@ private:
 	void listen();
 
 public:
-	CatGameServer(unsigned short desiredPort) : listenerPort(desiredPort) {
+	CatGameServer(unsigned short desiredPort = CatGameServer::defaultPort) : listenerPort(desiredPort) {
 		listenerPort = this->bindToPort();
 	}
 	~CatGameServer() {
@@ -23,5 +22,6 @@ public:
 
 	void ServerFunction();
 
+	const static unsigned short defaultPort;
 
 };
