@@ -122,6 +122,9 @@
       </PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)\dependencies\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,6 +143,8 @@
       </PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)dependencies\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -151,17 +156,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Client\Client.cpp" />
     <ClCompile Include="src\game_constants.hpp" />
     <ClCompile Include="src\map.cpp" />
     <ClCompile Include="src\player.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Server\server.cpp" />
     <ClCompile Include="src\task.cpp" />
+    <ClCompile Include="src\WindowApp\Menu\Button.cpp" />
+    <ClCompile Include="src\WindowApp\WindowApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Client\Client.hpp" />
     <ClInclude Include="src\map.hpp" />
     <ClInclude Include="src\player.hpp" />
+    <ClInclude Include="src\Server\server.hpp" />
     <ClInclude Include="src\structures.hpp" />
     <ClInclude Include="src\task.hpp" />
+    <ClInclude Include="src\Utility\Exceptions.hpp" />
+    <ClInclude Include="src\Utility\logging.hpp" />
+    <ClInclude Include="src\WindowApp\AppState.hpp" />
+    <ClInclude Include="src\WindowApp\Menu\Button.hpp" />
+    <ClInclude Include="src\WindowApp\Menu\uiElement.hpp" />
+    <ClInclude Include="src\WindowApp\WindowApp.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
