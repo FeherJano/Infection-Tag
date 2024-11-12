@@ -3,7 +3,7 @@
 #include <thread>
 
 
-WindowApp::WindowApp(const unsigned width = 1024, const unsigned height = 768) : width(width), height(height), gameServer(nullptr), player(nullptr) {
+WindowApp::WindowApp(asio::io_context& ioC, const unsigned width = 1024, const unsigned height = 768) : width(width), height(height),ioContext(ioC), gameServer(nullptr), player(nullptr) {
 	mainWindow = new sf::RenderWindow(sf::VideoMode(width, height), "Freaking cats");
 	currentState = appInit;
 
@@ -25,13 +25,16 @@ WindowApp::~WindowApp() {
 
 void WindowApp::startServer() {
 	if (this->gameServer != nullptr)return;
-	this->gameServer = std::unique_ptr<CatGameServer>(new CatGameServer(myPort));
+	this->gameServer = std::unique_ptr<CatGameServer>(new CatGameServer(ioContext,myPort));
 	std::thread serverThread(&CatGameServer::ServerFunction, &(*gameServer));
 	serverThread.detach();
 } 
 
 void WindowApp::clientEcho() {
-	
+	while (1) {
+		player->msgToServer("Hello man");
+		player->msgFromServer();
+	}
 }
 
 void WindowApp::startClient() {

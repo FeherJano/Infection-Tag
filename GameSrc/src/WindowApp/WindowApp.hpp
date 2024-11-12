@@ -20,9 +20,10 @@ protected:
 	std::unique_ptr<Client> player;
 	std::list<uiElement*> uiElements;
 	void clientEcho();
+	asio::io_context &ioContext;
 
 public:
-	WindowApp(const unsigned width, const unsigned height);
+	WindowApp(asio::io_context& ioC,const unsigned width, const unsigned height);
 	~WindowApp();
 
 	void startServer();

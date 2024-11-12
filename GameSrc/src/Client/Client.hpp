@@ -1,12 +1,18 @@
 #pragma once
 #include "nlohmann/json.hpp"
-using json = nlohmann::json;
 #include "asio.hpp"
+
+using asio::ip::udp;
+using json = nlohmann::json;
 //TODO MAKE COMMUNICATION JSON BASED!!!!!
 
 class Client {
 	uint16_t port;
-protected:
+	asio::io_context ioContext;
+	udp::resolver resolver;
+	udp::endpoint recieverPoint;
+	udp::endpoint senderPoint;
+	udp::socket mainSocket;
 	
 public:
 	static unsigned short connTimeoutSec;
