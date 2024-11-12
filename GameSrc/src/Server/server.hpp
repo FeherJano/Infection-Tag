@@ -1,20 +1,25 @@
 #pragma once
-#include <SFML/Network.hpp>
 #include <vector>
 #include "nlohmann/json.hpp"
-using json = nlohmann::json;
+#include "asio.hpp"
+
+using nlohmann::json;
+using asio::ip::udp;
 
 //TODO MAKE COMMUNICATION JSON BASED!!!!!
 class CatGameServer{
 private:
-	sf::UdpSocket client;
 	unsigned short listenerPort;
 
 	unsigned short bindToPort();
 	void listen();
 
+	asio::io_context ioContext;
+	udp::socket mainSocket;
+
+
 public:
-	CatGameServer(unsigned short desiredPort = CatGameServer::defaultPort) : listenerPort(desiredPort) {
+	CatGameServer(unsigned short desiredPort = CatGameServer::defaultPort) : listenerPort(desiredPort),mainSocket(ioContext, (udp::v4(), defaultPort)){
 		listenerPort = this->bindToPort();
 	}
 	~CatGameServer() {

@@ -31,22 +31,7 @@ void WindowApp::startServer() {
 } 
 
 void WindowApp::clientEcho() {
-	if (this->player != nullptr)return;
-	this->player = std::unique_ptr<Client>(new Client(localhost, myPort));
-	player->connectToServer();
-	while (true)
-	{
-		sf::Packet s = sf::Packet();
-		std::string hello = "Hello Server";
-		s << hello;
-		while (!player->msgToServer(s)) {
-
-		}
-		auto p = player->msgFromServer();
-		hello.clear();
-		p >> hello;
-		std::cout << "server: " << hello << "\n";
-	}
+	
 }
 
 void WindowApp::startClient() {
