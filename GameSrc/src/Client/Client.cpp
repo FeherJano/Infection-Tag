@@ -52,12 +52,17 @@ void Client::setConnTimeoutSec(unsigned short newTimeout) {
 bool Client::msgToServer(sf::Packet &msg) {
 
     short attempts = 0;
-    while (attempts < Client::maxRetries) {
-        if (getServer().send(msg) != sf::Socket::Partial) {
-            break;
+    try {
+        while (attempts < Client::maxRetries) {
+            if (getServer().send(msg) != sf::Socket::Partial) {
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(Client::timeoutMs));
+            attempts++;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(Client::timeoutMs));
-        attempts++;
+    }
+    catch (std::exception e) {
+        logErr("An exception occured during messaging server!"<<e.what());
     }
     return attempts != Client::maxRetries;
 
