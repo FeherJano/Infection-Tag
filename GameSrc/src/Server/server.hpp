@@ -1,15 +1,14 @@
 #pragma once
 #include <SFML/Network.hpp>
 #include <vector>
-
+#include "nlohmann/json.hpp"
+using json = nlohmann::json;
 
 //TODO MAKE COMMUNICATION JSON BASED!!!!!
 class CatGameServer{
 private:
-	sf::TcpListener clientListener;
-	sf::TcpSocket client;
+	sf::UdpSocket client;
 	unsigned short listenerPort;
-
 
 	unsigned short bindToPort();
 	void listen();
