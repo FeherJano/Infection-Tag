@@ -1,5 +1,7 @@
 #pragma once
 #include "SFML/Network.hpp"
+#include "nlohmann/json.hpp"
+using json = nlohmann::json;
 
 //TODO MAKE COMMUNICATION JSON BASED!!!!!
 
