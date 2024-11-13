@@ -6,17 +6,13 @@
 #include "Exceptions.hpp"
 
 
-//TODO implement time getter function
-static const char* getTime() {
-	return "";
-}
 
-#define log(msg,level) std::cout<< getTime <<" |"<<level <<"| : "<<msg<<'\n';
+#define log(msg,level) std::cout << level <<"| : "<<msg<<'\n';
 #define logErr(msg) std::cerr<<"An error occurred in: "<<__FILE__<<" at: "<< __LINE__ <<"\n Err message: \n"<<msg<<'\n';
 
 constexpr int err_Fatal = -1;
-const std::string loggingInfo = "INFO";
-const std::string loggingWarn = "WARNING";
-const std::string loggingErr = "ERROR";
+const std::string logLevelInfo = "INFO";
+const std::string logLevelWarn = "WARNING";
+const std::string logLevelErr = "ERROR";
 
 

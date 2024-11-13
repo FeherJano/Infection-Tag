@@ -2,9 +2,10 @@
 #include <iostream>
 #include <thread>
 
-WindowApp::WindowApp(const unsigned width, const unsigned height)
-    : width(width), height(height), gameServer(nullptr), player(nullptr) {
-    mainWindow = new sf::RenderWindow(sf::VideoMode(width, height), "Freaking Cats");
+
+WindowApp::WindowApp(const unsigned width = 1024, const unsigned height = 768) : width(width), height(height), gameServer(nullptr), player(nullptr) {
+	mainWindow = new sf::RenderWindow(sf::VideoMode(width, height), "Freaking cats");
+
     initializeMenu();
 }
 
@@ -15,33 +16,26 @@ WindowApp::~WindowApp() {
 }
 
 void WindowApp::startServer() {
-    if (this->gameServer != nullptr) return;
-    this->gameServer = std::unique_ptr<CatGameServer>(new CatGameServer(myPort));
-    std::thread serverThread(&CatGameServer::ServerFunction, &(*gameServer));
-    serverThread.detach();
-}
+	if (this->gameServer != nullptr)return;
+	this->gameServer = std::unique_ptr<CatGameServer>(new CatGameServer(ioContext,myPort));
+	std::thread serverThread(&CatGameServer::ServerFunction, &(*gameServer));
+	serverThread.detach();
+} 
 
 void WindowApp::clientEcho() {
-    if (this->player != nullptr) return;
-    this->player = std::unique_ptr<Client>(new Client(localhost, myPort));
-    player->connectToServer();
-    while (true) {
-        sf::Packet s;
-        std::string hello = "Hello Server";
-        s << hello;
-        while (!player->msgToServer(s)) {}
-        auto p = player->msgFromServer();
-        hello.clear();
-        p >> hello;
-        std::cout << "server: " << hello << "\n";
-    }
+	while (1) {
+		player->msgToServer("Hello man");
+		player->msgFromServer();
+	}
 }
 
 void WindowApp::startClient() {
-    if (this->player != nullptr) return;
-    std::thread echoThread(&WindowApp::clientEcho, &(*this));
-    echoThread.detach();
+	if (this->player != nullptr)return;
+	player = std::unique_ptr<Client>(new Client("localhost", 8085U, ioContext));
+	std::thread echoThread(&WindowApp::clientEcho, &(*this));
+	echoThread.detach();
     currentState = AppState::GAME;
+
 }
 
 void WindowApp::processInput() {
