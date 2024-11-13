@@ -1,5 +1,5 @@
 #include "Client.hpp"
-#include "../Utility/logging.hpp"
+#include "../../Utility/logging.hpp"
 #include <thread>
 #include "asio.hpp"
 

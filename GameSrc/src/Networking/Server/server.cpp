@@ -21,6 +21,7 @@ void CatGameServer::listen() {
 	while (getCurrentState() == stateLobby) {
 		udp::endpoint remote_endpoint;
 		auto len = mainSocket.receive_from(asio::buffer(recv_buf), remote_endpoint);
+		
 	}
 
 }
