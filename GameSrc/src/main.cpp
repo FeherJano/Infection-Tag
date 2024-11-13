@@ -9,7 +9,6 @@ int main() {
     asio::io_context ioContext;
     WindowApp game(ioContext, width, height);
     game.main();
-    ioContext.run();
 
     return 0;
 }

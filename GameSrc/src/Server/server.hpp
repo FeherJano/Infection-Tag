@@ -2,25 +2,33 @@
 #include <vector>
 #include "nlohmann/json.hpp"
 #include "asio.hpp"
-
+#include "../Utility/logging.hpp"
 using nlohmann::json;
 using asio::ip::udp;
 
-//TODO MAKE COMMUNICATION JSON BASED!!!!!
-class CatGameServer{
-private:
+enum serverState{stateLobby,stateGameRun,stateIdle};
 
-	void listen();
+                
+class CatGameServer{
+public:
+	const static unsigned short defaultPort;
+
+	CatGameServer(asio::io_context& ioC, unsigned short desiredPort = CatGameServer::defaultPort) : mainSocket(udp::socket(ioC, udp::endpoint(udp::v4(), desiredPort))) {
+		log("Server started on adress: " << mainSocket.local_endpoint().address().to_string(), logLevelInfo);
+	}
+	~CatGameServer() {
+		mainSocket.close();
+	}
+	void ServerFunction();
+	void changeState(serverState newState);
+	serverState getCurrentState()const;
+
+private:
+	serverState currentState;
 	udp::socket mainSocket;
 
+	void listen();
+	bool handShake();
 
-public:
-	CatGameServer(asio::io_context &ioC,unsigned short desiredPort = CatGameServer::defaultPort) : mainSocket(udp::socket(ioC, (udp::v4(), desiredPort))){
-	}
-	~CatGameServer() = default;
-	void start();
-	void ServerFunction();
-
-	const static unsigned short defaultPort;
 
 };

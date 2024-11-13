@@ -39,7 +39,7 @@ void WindowApp::clientEcho() {
 
 void WindowApp::startClient() {
 	if (this->player != nullptr)return;
-
+	player = std::unique_ptr<Client>(new Client("localhost", 8085U, ioContext));
 	std::thread echoThread(&WindowApp::clientEcho, &(*this));
 	echoThread.detach();
 	currentState = appRunning;

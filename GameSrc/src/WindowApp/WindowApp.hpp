@@ -7,7 +7,7 @@
 #include "Menu/Button.hpp"
 
 
-const unsigned short myPort = 8088;
+const unsigned short myPort = 8085;
 const std::string localhost = "localhost";
 
 class WindowApp {

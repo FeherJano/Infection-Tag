@@ -9,8 +9,8 @@ unsigned short Client::timeoutMs = 30;
 unsigned short Client::maxRetries = 3;
 
 
-Client::Client(const std::string& address, uint16_t port): port(port), resolver(udp::resolver(ioContext)),mainSocket(ioContext) {
-    recieverPoint = *resolver.resolve(udp::v4(), address, "Server").begin();
+Client::Client(const std::string& address, uint16_t port, asio::io_context& ioC): port(port),ioContext(ioC), resolver(udp::resolver(ioContext)),mainSocket(ioContext) {
+    recieverPoint = *resolver.resolve(udp::v4(), address,std::to_string(port)).begin();
     mainSocket.open(udp::v4());
 }
 
@@ -44,7 +44,7 @@ bool Client::msgToServer(std::string message) {
 }
 
 json Client::msgFromServer(unsigned short timeout) {
-    json response = "'{a:5}'"_json;
+    json response = json::parse(R"({ "a":3,"b" : 4 })");
     try {
         std::array<char, 128> recv_buf;
         udp::endpoint sender_endpoint;

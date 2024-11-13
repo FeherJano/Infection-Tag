@@ -8,7 +8,7 @@ using json = nlohmann::json;
 
 class Client {
 	uint16_t port;
-	asio::io_context ioContext;
+	asio::io_context &ioContext;
 	udp::resolver resolver;
 	udp::endpoint recieverPoint;
 	udp::endpoint senderPoint;
@@ -19,7 +19,7 @@ public:
 	static unsigned short maxRetries;
 	static unsigned short timeoutMs;
 
-	Client(const std::string& address, uint16_t port);
+	Client(const std::string& address, uint16_t port,asio::io_context& ioC);
 	~Client() = default;
 
     uint16_t getPort() const;
