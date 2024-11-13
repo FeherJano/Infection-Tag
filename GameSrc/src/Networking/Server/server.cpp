@@ -1,7 +1,7 @@
 #include "server.hpp"
 #include <iostream>
 #include <thread>
-#include "../Utility/logging.hpp"
+#include "../../Utility/logging.hpp"
 #include  <array>
 
 const unsigned short CatGameServer::defaultPort = 8085;
@@ -17,8 +17,10 @@ void CatGameServer::changeState(serverState nS) {
 
 
 void CatGameServer::listen() {
+	std::array<char, 128> recv_buf;
 	while (getCurrentState() == stateLobby) {
-
+		udp::endpoint remote_endpoint;
+		auto len = mainSocket.receive_from(asio::buffer(recv_buf), remote_endpoint);
 	}
 
 }

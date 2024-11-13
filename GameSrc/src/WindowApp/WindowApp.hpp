@@ -1,8 +1,8 @@
 #pragma once
 #include <list>
 #include "SFML/Graphics.hpp"
-#include "../Server/server.hpp"
-#include "../Client/Client.hpp"
+#include "../Networking/Server/server.hpp"
+#include "../Networking/Client/Client.hpp"
 #include "AppState.hpp"
 #include "Menu/Button.hpp"
 
