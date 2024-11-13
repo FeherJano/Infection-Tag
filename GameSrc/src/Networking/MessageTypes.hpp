@@ -1,5 +1,5 @@
 #pragma once
-#include <map>
+#include <unordered_map>
 #include <string>
 
 
@@ -13,7 +13,7 @@ public:
 	~messageSet() {
 		msgPool.clear();
 	}
-	const std::string& getMsg(messageType t)const {
+	const std::string getMsg(messageType t){
 		auto it = msgPool.find(t);
 		if (it == msgPool.end()) {
 			return msgPool[mt_invalidOp];
@@ -21,7 +21,7 @@ public:
 	}
 
 private:
-	std::map<messageSet::messageType, std::string> msgPool;
+	std::unordered_map<messageType, std::string> msgPool;
 	void init() {
 		for (int i = mt_OK; i < mt_NOK;i++) {
 			std::string toAppend;
