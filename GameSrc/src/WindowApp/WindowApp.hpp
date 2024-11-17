@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 #include "SFML/Graphics.hpp"
-#include "../Networking/Server/server.hpp"
+#include "../Networking/Server/Server.hpp"
 #include "../Networking/Client/Client.hpp"
 #include "AppState.hpp"
 #include "Menu/Button.hpp"

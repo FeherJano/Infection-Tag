@@ -3,7 +3,7 @@
 #include <thread>
 
 
-WindowApp::WindowApp(const unsigned width = 1024, const unsigned height = 768) : width(width), height(height), gameServer(nullptr), player(nullptr) {
+WindowApp::WindowApp(asio::io_context& ioC, const unsigned width = 1024, const unsigned height = 768) : ioContext(ioC), width(width), height(height), gameServer(nullptr), player(nullptr) {
 	mainWindow = new sf::RenderWindow(sf::VideoMode(width, height), "Freaking cats");
 
     initializeMenu();
