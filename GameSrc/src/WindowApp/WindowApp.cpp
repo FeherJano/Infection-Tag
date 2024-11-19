@@ -85,7 +85,7 @@ int WindowApp::main() {
     while (mainWindow->isOpen()) {
         processInput();
         renderElements();
-        ioContext.poll(); // ASIO I/O kezelése
+        ioContext.poll();
     }
     return 0;
 }
