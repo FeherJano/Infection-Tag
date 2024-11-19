@@ -8,8 +8,15 @@
 #include "AppState.hpp"
 #include "Menu/Button.hpp"
 
+const unsigned short myPort = 8085;
+const std::string localhost = "localhost";
+
 class WindowApp {
-private:
+protected:
+
+    std::unique_ptr<CatGameServer> gameServer;
+    std::unique_ptr<Client> player;
+
     unsigned width, height;
     sf::RenderWindow* mainWindow;
     AppState currentState;
@@ -17,7 +24,11 @@ private:
 
     std::vector<std::unique_ptr<uiElement>> uiElements;
 
-    // Állapot inicializálás
+    void clientEcho();
+
+private:
+
+    // State inits
     void initializeMenu();
     void initializePlayState();
     void initializeSettingsState();
@@ -25,14 +36,17 @@ private:
     void initializeLobbyStateHost();
     void initializeLobbyStateClient();
 
-    // Memóriakezelés
     void clearUIElements();
+
+    void processInput();
+    void renderElements();
 
 public:
     WindowApp(asio::io_context& ioC, const unsigned width = 800, const unsigned height = 600);
     ~WindowApp();
 
-    void processInput();
-    void renderElements();
+    void startServer();
+    void startClient();
+
     int main();
 };
