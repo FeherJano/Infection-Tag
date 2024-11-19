@@ -41,8 +41,10 @@ public:
 
     }
 
-    static bool isMouseThere(const sf::Vector2i &mousePos, const sf::Vector2f& p1, const sf::Vector2f& p2) {
-        return mousePos.x > p1.x && mousePos.y > p1.y &&
-            mousePos.x < p2.x && mousePos.y < p2.y;
+
+    static bool isMouseThere(const sf::Vector2i& mousePos, const sf::Vector2f& topLeft, const sf::Vector2f& bottomRight) {
+        return mousePos.x >= topLeft.x && mousePos.x <= bottomRight.x &&
+            mousePos.y >= topLeft.y && mousePos.y <= bottomRight.y;
     }
+
 };

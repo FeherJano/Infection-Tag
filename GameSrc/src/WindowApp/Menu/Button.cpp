@@ -1,4 +1,4 @@
-#include "Button.hpp"
+﻿#include "Button.hpp"
 #include "../../Utility/logging.hpp"
 
 //STATIC CLASS VARIABLES DEFINED HERE

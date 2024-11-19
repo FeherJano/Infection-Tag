@@ -72,7 +72,7 @@ void WindowApp::initializeJoinState() {
     clearUIElements();
     uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 150, 100), sf::Vector2f(200, 50), "Code", 8U)); // Text input field placeholder
     uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 150, 200), sf::Vector2f(200, 50), "IP", 9U));   // Text input field placeholder
-    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 300), sf::Vector2f(125, 50), "Join", 10U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 300), sf::Vector2f(125, 50), "JoinToLobby", 10U));
     uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 400), sf::Vector2f(125, 50), "Back", 11U));
     currentState = AppState::JOIN;
 }
@@ -100,30 +100,32 @@ void WindowApp::processInput() {
     while (mainWindow->pollEvent(ev)) {
         if (ev.type == sf::Event::Closed || (ev.type == sf::Event::KeyPressed && ev.key.code == sf::Keyboard::Escape)) {
             mainWindow->close();
+            return;
         }
         for (auto& i : uiElements) {
             if (i && i->elementFunction(ev)) {
+                std::cout << "UI Element triggered with ID: " << i->getId() << std::endl;
                 switch (i->getId()) {
-                case 1: initializePlayState(); break;
-                case 2: initializeSettingsState(); break;
-                case 3: mainWindow->close(); break;
-                case 4: initializeJoinState(); break;
-                case 5: /*startServer(); */ initializeLobbyStateHost(); break;
-                case 6: initializeMenu(); break;
-                case 7: initializeMenu(); break;
-                case 10: /*startClient(); */ initializeLobbyStateClient(); break;
-                case 11: initializePlayState(); break;
-                case 12: currentState = AppState::GAME; break; // Start the game
-                case 13: initializeMenu(); break; // Quit lobby - host
-                case 14: /* TODO: Implement ready state logic */ break;
-                case 15: initializeMenu(); break; // Quit lobby - client
+                    case 1: initializePlayState(); break;
+                    case 2: initializeSettingsState(); break;
+                    case 3: mainWindow->close(); break;
+                    case 4: initializeJoinState(); break;
+                    case 5: startServer(); initializeLobbyStateHost(); break;
+                    case 6: initializeMenu(); break;
+                    case 7: initializeMenu(); break;
+                    case 10: startClient();  initializeLobbyStateClient(); break;
+                    case 11: initializePlayState(); break;
+                    case 12: /*currentState = AppState::GAME; */  break; // Start the game
+                    case 13: initializeMenu(); break; // Quit lobby - host
+                    case 14: /* TODO: Implement ready state logic */ break;
+                    case 15: initializeMenu(); break; // Quit lobby - client
                 default: break;
                 }
+                break;
             }
         }
     }
 }
-
 
 void WindowApp::renderElements() {
     mainWindow->clear(sf::Color::Black);
