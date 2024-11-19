@@ -3,6 +3,7 @@
 
 enum class AppState {
     MENU,
+    SETTINGS,
     PLAY,
     JOIN,
     LOBBY_HOST,
