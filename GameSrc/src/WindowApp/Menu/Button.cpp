@@ -49,7 +49,8 @@ int Button::elementFunction(const sf::Event& e) {
 	sf::Vector2i mousePos = sf::Mouse::getPosition(*mainWindow);
 
 	if (e.mouseButton.button == sf::Mouse::Left &&
-		isMouseThere(mousePos,getPosition(),getPosition()+getSize())
+		isMouseThere(mousePos,getPosition(),getPosition()+getSize()) &&
+		sf::Mouse::isButtonPressed(e.mouseButton.button)
 		){
 		body.setFillColor(Button::activatedColor2);
 		return 1;
