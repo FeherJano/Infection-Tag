@@ -31,7 +31,7 @@ Button::Button(const sf::RenderWindow& renderWindow, sf::Vector2f pos, sf::Vecto
 	body.setPosition(pos);
 	sf::Vector2f labelPos = pos; //the text starts at the upper left side of the box
 	//centering the text
-	labelPos.x += label.findCharacterPos(text.size() ).x / 2; //the text is moved to the right with the half of the last characters x position
+	//labelPos.x += label.findCharacterPos(text.size()-1 ).x / 2; //the text is moved to the right with the half of the last characters x position
 	labelPos.y += label.getCharacterSize() / 4; //the text is moved to the bottom with one quarter of the current char size
 	label.setPosition(labelPos);
 	body.setFillColor(Button::baseColor);

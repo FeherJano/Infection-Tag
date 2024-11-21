@@ -72,7 +72,7 @@ void WindowApp::initializeJoinState() {
     clearUIElements();
     uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 150, 100), sf::Vector2f(200, 50), "Code", 8U)); // Text input field placeholder
     uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 150, 200), sf::Vector2f(200, 50), "IP", 9U));   // Text input field placeholder
-    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 300), sf::Vector2f(125, 50), "JoinToLobby", 10U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 140, 300), sf::Vector2f(190, 50), "JoinToLobby", 10U));
     uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 400), sf::Vector2f(125, 50), "Back", 11U));
     currentState = AppState::JOIN;
 }
