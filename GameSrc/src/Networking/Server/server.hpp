@@ -14,9 +14,9 @@ enum serverState{serverStateLobby,serverStateGameStart,serverStateGameRun,server
 
                 
 class CatGameServer{
-public:
+public:	
+	const static uint32_t maximumMessageLength;
 	const static uint16_t defaultPort;
-	const static unsigned maximumMessageLength;
 	const static uint8_t maxPlayers;
 
 	CatGameServer(asio::io_context& ioC, uint16_t desiredPort = CatGameServer::defaultPort);

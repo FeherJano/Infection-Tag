@@ -4,11 +4,12 @@
 #include "../../Utility/logging.hpp"
 #include  <array>
 
-const unsigned short CatGameServer::defaultPort = 8085;
-const unsigned CatGameServer::maximumMessageLength = 2048;
+const uint16_t CatGameServer::defaultPort = 8085;
+const uint32_t CatGameServer::maximumMessageLength = 2048;
+const uint8_t CatGameServer::maxPlayers = 8;
 
 
-CatGameServer::CatGameServer(asio::io_context& ioC, uint16_t desiredPort = CatGameServer::defaultPort) :
+CatGameServer::CatGameServer(asio::io_context& ioC, uint16_t desiredPort) :
 	mainSocket(udp::socket(ioC, udp::endpoint(udp::v4(), desiredPort))), aviableMessages(messageSet()) {
 	log("Server started on adress: " << mainSocket.local_endpoint().address().to_string(), logLevelInfo);
 }
