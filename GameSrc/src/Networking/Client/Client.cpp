@@ -51,8 +51,7 @@ json Client::msgFromServer(unsigned short timeout) {
         size_t len = mainSocket.receive_from(
             asio::buffer(recv_buf), sender_endpoint);
             std::cout.write(recv_buf.data(), len);
-    }
-    catch (std::exception e) {
+    }catch (std::exception e){
         logErr("An error occurred during recieving from server!");
     }
     return response;

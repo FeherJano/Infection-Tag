@@ -20,6 +20,7 @@ void WindowApp::startServer() {
     this->gameServer = std::unique_ptr<CatGameServer>(new CatGameServer(ioContext, myPort));
     std::thread serverThread(&CatGameServer::ServerFunction, &(*gameServer));
     serverThread.detach();
+    gameServer->setState(serverStateLobby);
 }
 
 void WindowApp::clientEcho() {
