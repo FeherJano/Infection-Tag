@@ -4,7 +4,6 @@
 
 using asio::ip::udp;
 using json = nlohmann::json;
-//TODO MAKE COMMUNICATION JSON BASED!!!!!
 
 class Client {
 	uint16_t port;
@@ -22,11 +21,8 @@ public:
 	Client(const std::string& address, uint16_t port,asio::io_context& ioC);
 	~Client() = default;
 
-    uint16_t getPort() const;
-    static unsigned short getConnTimeoutSec();
-	
+    uint16_t getPort() const;	
     void setPort(uint16_t newPort);
-    static void setConnTimeoutSec(unsigned short newTimeout);
 
 	bool msgToServer(std::string message);
 	json msgFromServer(unsigned short timeOut = timeoutMs);

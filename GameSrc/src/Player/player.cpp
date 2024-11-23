@@ -1,6 +1,6 @@
 #include "player.hpp"
-#include "map.hpp"
-#include "game_constants.hpp"
+#include "../map.hpp"
+#include "../game_constants.hpp"
 
 namespace {
     enum MovementKeyIndex {
@@ -65,6 +65,7 @@ void Player::update(float deltaTime) {
         hitCooldownTimer -= deltaTime;
     }
 }
+
 
 Survivor::Survivor(float startX,
                    float startY,

@@ -23,18 +23,9 @@ void WindowApp::startServer() {
     gameServer->setState(serverStateLobby);
 }
 
-void WindowApp::clientEcho() {
-    while (1) {
-        player->msgToServer("Hello man");
-        player->msgFromServer();
-    }
-}
 
 void WindowApp::startClient() {
     if (this->player != nullptr)return;
-    player = std::unique_ptr<Client>(new Client("localhost", 8085U, ioContext));
-    std::thread echoThread(&WindowApp::clientEcho, &(*this));
-    echoThread.detach();
     currentState = AppState::GAME;
 
 }

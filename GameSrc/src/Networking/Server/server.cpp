@@ -10,13 +10,14 @@ const uint8_t CatGameServer::maxPlayers = 8;
 
 
 CatGameServer::CatGameServer(asio::io_context& ioC, uint16_t desiredPort) :
-	mainSocket(udp::socket(ioC, udp::endpoint(udp::v4(), desiredPort))), aviableMessages(messageSet()) {
+	mainSocket(udp::socket(ioC, udp::endpoint(udp::v4(), desiredPort))), aviableMessages(messageSet()),
+	players(std::unordered_map<std::string,std::pair<udp::endpoint,std::queue<json>>>()){
 	log("Server started on adress: " << mainSocket.local_endpoint().address().to_string(), logLevelInfo);
 }
 
 CatGameServer::~CatGameServer() {
 	mainSocket.close();
-	messageQueue.clear();
+	players.clear();
 }
 
 
@@ -41,7 +42,7 @@ uint8_t CatGameServer::getPlayerCount()const {
 
 bool CatGameServer::broadcastMessage(json msg) {
 	try {
-		mainSocket.send(asio::buffer(msg.dump()));
+		//TODO implement broadcast by iterating through players table and sending message to each player
 	}
 	catch (std::exception e) {
 		logErr("Failed to broadcast message on server side! Reason: " << e.what());
@@ -62,6 +63,19 @@ bool CatGameServer::sendMsg(udp::endpoint to, json msg) {
 	return true;
 }
 
+/*@param playerAddress the address of the player to be registered
+* @returns the playerID of the registered player or empty string if registration failed.
+* 
+*/
+std::string CatGameServer::registerPlayer(udp::endpoint playerAddress) {
+	if (getPlayerCount() >= maxPlayers) {
+		return "";
+	}
+	std::string id = "Player " + getPlayerCount() + 1;
+	players[id] = std::pair<udp::endpoint, std::queue<json>>(playerAddress, std::queue<json>());
+	setPlayerCount(getPlayerCount() + 1);
+	return id;
+}
 
 void CatGameServer::listen() {
 	std::array<char, 128> recv_buf;
@@ -71,12 +85,22 @@ void CatGameServer::listen() {
 			auto len = mainSocket.receive_from(asio::buffer(recv_buf), remote_endpoint);
 			json request = json::parse(recv_buf.data());
 
+			//skipping everything that is not a connection request
 			if (request.at("message_type") != aviableMessages.getMsg(messageSet::mt_connReq))continue;
-
+			auto pId = registerPlayer(remote_endpoint);
+			if (pId != "") {
+				json response;
+				response["message_type"] = aviableMessages.getMsg(messageSet::mt_OK);
+				response["playerId"] = pId;
+				mainSocket.send_to(asio::buffer(response.dump()), remote_endpoint);
+			}
 
 		}
+		catch (json::exception e) {
+			logErr("Json exception, " << e.what());
+		}
 		catch (std::exception e) {
-			logErr("Server listening state: " << e.what());
+			logErr(e.what());
 		}
 		
 		

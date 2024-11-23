@@ -4,7 +4,7 @@
 #include <vector>
 #include <SFML/Graphics.hpp>
 #include "structures.hpp"
-#include "player.hpp"
+#include "Player/player.hpp"
 #include "game_constants.hpp"
 
 using namespace std;

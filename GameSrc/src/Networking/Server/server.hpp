@@ -36,10 +36,9 @@ private:
 	serverState currentState;
 	udp::socket mainSocket;
 	messageSet aviableMessages;
-	std::unordered_map<std::string, std::queue<json>> messageQueue; //hasmap - key: playerId, value: message queue for that player
-
+	std::unordered_map<std::string, std::pair<udp::endpoint,std::queue<json>>> players; //hasmap - key: playerId, value: a pair of adress and message queue of the player 
 	void listen();
-	bool registerPlayer();
+	std::string registerPlayer(udp::endpoint playerAddress);
 	
 
 };

@@ -4,10 +4,9 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <array>
-#include "map.hpp"
-#include "game_constants.hpp"
-
-using namespace std;
+#include "../map.hpp"
+#include "../game_constants.hpp"
+#include "../Networking/Client/Client.hpp"
 
 
 class Player {

@@ -160,7 +160,7 @@
     <ClCompile Include="src\map.cpp" />
     <ClCompile Include="src\Networking\Client\Client.cpp" />
     <ClCompile Include="src\Networking\Server\Server.cpp" />
-    <ClCompile Include="src\player.cpp" />
+    <ClCompile Include="src\Player\player.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\task.cpp" />
     <ClCompile Include="src\WindowApp\Menu\Button.cpp" />
@@ -171,7 +171,7 @@
     <ClInclude Include="src\Networking\Client\Client.hpp" />
     <ClInclude Include="src\Networking\MessageTypes.hpp" />
     <ClInclude Include="src\Networking\Server\Server.hpp" />
-    <ClInclude Include="src\player.hpp" />
+    <ClInclude Include="src\Player\player.hpp" />
     <ClInclude Include="src\structures.hpp" />
     <ClInclude Include="src\task.hpp" />
     <ClInclude Include="src\Utility\Exceptions.hpp" />

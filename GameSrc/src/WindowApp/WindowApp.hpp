@@ -5,6 +5,7 @@
 #include "SFML/Graphics.hpp"
 #include "../Networking/Server/Server.hpp"
 #include "../Networking/Client/Client.hpp"
+#include "../Player/player.hpp"
 #include "AppState.hpp"
 #include "Menu/Button.hpp"
 
@@ -15,7 +16,7 @@ class WindowApp {
 protected:
 
     std::unique_ptr<CatGameServer> gameServer;
-    std::unique_ptr<Client> player;
+    std::unique_ptr<Player> player;
 
     unsigned width, height;
     sf::RenderWindow* mainWindow;
@@ -24,7 +25,6 @@ protected:
 
     std::vector<std::unique_ptr<uiElement>> uiElements;
 
-    void clientEcho();
 
 private:
 
