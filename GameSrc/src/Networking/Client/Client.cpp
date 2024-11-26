@@ -32,9 +32,9 @@ std::string Client::connect() {
         if (response.at("message_type") != messageSet::OK) {
             return "";
         }
-        //TODO save player id
-        std::cout << response.at("playerId")<<'\n';
-        return response.at("playerId");
+        playerId = response.at("playerId").template get<std::string>();
+        std::cout << playerId<<'\n';
+        return playerId;
     }
     catch (json::exception e) {
 

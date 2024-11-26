@@ -28,6 +28,7 @@ private:
 	udp::socket mainSocket;
 	std::array<char, maxMessageLength> recvBuf;
 	std::array<char, maxMessageLength> sendBuf;
+	std::string playerId;
 	Killer* myKiller;
 	Survivor* mySurvivor;
 
