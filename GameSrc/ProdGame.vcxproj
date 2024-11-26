@@ -159,6 +159,7 @@
     <ClCompile Include="src\game_constants.hpp" />
     <ClCompile Include="src\map.cpp" />
     <ClCompile Include="src\Networking\Client\Client.cpp" />
+    <ClCompile Include="src\Networking\MessageTypes.cpp" />
     <ClCompile Include="src\Networking\Server\Server.cpp" />
     <ClCompile Include="src\Player\player.cpp" />
     <ClCompile Include="src\main.cpp" />

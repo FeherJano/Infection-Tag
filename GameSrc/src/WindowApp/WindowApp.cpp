@@ -27,7 +27,8 @@ void WindowApp::startServer() {
 void WindowApp::startClient() {
     if (this->player != nullptr)return;
     currentState = AppState::GAME;
-
+    this->player = std::unique_ptr<Client>(new Client("localhost", 8085, ioContext));
+    player->connect();
 }
 
 void WindowApp::clearUIElements() {

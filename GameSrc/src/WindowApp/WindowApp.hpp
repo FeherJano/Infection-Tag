@@ -16,7 +16,7 @@ class WindowApp {
 protected:
 
     std::unique_ptr<CatGameServer> gameServer;
-    std::unique_ptr<Player> player;
+    std::unique_ptr<Client> player;
 
     unsigned width, height;
     sf::RenderWindow* mainWindow;

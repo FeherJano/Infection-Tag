@@ -6,7 +6,6 @@
 #include <array>
 #include "../map.hpp"
 #include "../game_constants.hpp"
-#include "../Networking/Client/Client.hpp"
 
 
 class Player {

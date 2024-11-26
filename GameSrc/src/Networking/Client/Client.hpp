@@ -1,31 +1,35 @@
 #pragma once
+#include <array>
 #include "nlohmann/json.hpp"
 #include "asio.hpp"
+#include "../../Player/player.hpp"
+#include "../MessageTypes.hpp"
 
 using asio::ip::udp;
 using json = nlohmann::json;
 
 class Client {
-	uint16_t port;
-	asio::io_context &ioContext;
-	udp::resolver resolver;
-	udp::endpoint recieverPoint;
-	udp::endpoint senderPoint;
-	udp::socket mainSocket;
-	
 public:
-	static unsigned short connTimeoutSec;
-	static unsigned short maxRetries;
-	static unsigned short timeoutMs;
+	const static uint32_t maxMessageLength = 2048;
+	static uint8_t connTimeoutSec;
+	static uint8_t maxRetries;
+	static uint8_t timeoutMs;
 
 	Client(const std::string& address, uint16_t port,asio::io_context& ioC);
 	~Client() = default;
-
-    uint16_t getPort() const;	
-    void setPort(uint16_t newPort);
-
-	bool msgToServer(std::string message);
+	std::string connect();
+	bool msgToServer(json message);
 	json msgFromServer(unsigned short timeOut = timeoutMs);
 
+private:
+	asio::io_context& ioContext;
+	uint16_t port;
+	udp::endpoint remoteSendEndp;
+	udp::endpoint remoteRecieveEndp;
+	udp::socket mainSocket;
+	std::array<char, maxMessageLength> recv_buf;
+	std::array<char, maxMessageLength> send_buf;
+	Killer* myKiller;
+	Survivor* mySurvivor;
 
 };

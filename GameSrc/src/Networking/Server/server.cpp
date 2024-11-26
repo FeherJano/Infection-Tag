@@ -10,9 +10,9 @@ const uint8_t CatGameServer::maxPlayers = 8;
 
 
 CatGameServer::CatGameServer(asio::io_context& ioC, uint16_t desiredPort) :
-	mainSocket(udp::socket(ioC, udp::endpoint(udp::v4(), desiredPort))), aviableMessages(messageSet()),
+	mainSocket(udp::socket(ioC, udp::endpoint(udp::v4(), desiredPort))),
 	players(std::unordered_map<std::string,std::pair<udp::endpoint,std::queue<json>>>()){
-	log("Server started on adress: " << mainSocket.local_endpoint().address().to_string(), logLevelInfo);
+	logInfo("Server started on adress: " << mainSocket.local_endpoint().address().to_string());
 }
 
 CatGameServer::~CatGameServer() {
@@ -86,11 +86,11 @@ void CatGameServer::listen() {
 			json request = json::parse(recv_buf.data());
 
 			//skipping everything that is not a connection request
-			if (request.at("message_type") != aviableMessages.getMsg(messageSet::mt_connReq))continue;
+			if (request.at("message_type") != messageSet::connReq)continue;
 			auto pId = registerPlayer(remote_endpoint);
 			if (pId != "") {
 				json response;
-				response["message_type"] = aviableMessages.getMsg(messageSet::mt_OK);
+				response["message_type"] = messageSet::OK;
 				response["playerId"] = pId;
 				mainSocket.send_to(asio::buffer(response.dump()), remote_endpoint);
 			}
