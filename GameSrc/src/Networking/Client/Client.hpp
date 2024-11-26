@@ -22,13 +22,12 @@ public:
 	json msgFromServer(unsigned short timeOut = timeoutMs);
 
 private:
-	asio::io_context& ioContext;
 	uint16_t port;
 	udp::endpoint remoteSendEndp;
 	udp::endpoint remoteRecieveEndp;
 	udp::socket mainSocket;
-	std::array<char, maxMessageLength> recv_buf;
-	std::array<char, maxMessageLength> send_buf;
+	std::array<char, maxMessageLength> recvBuf;
+	std::array<char, maxMessageLength> sendBuf;
 	Killer* myKiller;
 	Survivor* mySurvivor;
 

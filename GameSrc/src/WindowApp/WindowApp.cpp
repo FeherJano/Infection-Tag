@@ -28,7 +28,7 @@ void WindowApp::startClient() {
     if (this->player != nullptr)return;
     currentState = AppState::GAME;
     this->player = std::unique_ptr<Client>(new Client("localhost", 8085, ioContext));
-    player->connect();
+    this->player->connect();
 }
 
 void WindowApp::clearUIElements() {
@@ -86,6 +86,10 @@ void WindowApp::initializeLobbyStateClient() {
     currentState = AppState::LOBBY_CLIENT;
 }
 
+void WindowApp::startGame() {
+
+}
+
 
 // clk
 void WindowApp::processInput() {
@@ -106,7 +110,7 @@ void WindowApp::processInput() {
                     case 5: startServer(); initializeLobbyStateHost(); break;
                     case 6: initializeMenu(); break;
                     case 7: initializeMenu(); break;
-                    case 10: startClient();  initializeLobbyStateClient(); break;
+                    case 10:{ startClient();  initializeLobbyStateClient(); break; }
                     case 11: initializePlayState(); break;
                     case 12: /*currentState = AppState::GAME; */  break; // Start the game
                     case 13: initializeMenu(); break; // Quit lobby - host

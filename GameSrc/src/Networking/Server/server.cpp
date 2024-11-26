@@ -71,14 +71,16 @@ std::string CatGameServer::registerPlayer(udp::endpoint playerAddress) {
 	if (getPlayerCount() >= maxPlayers) {
 		return "";
 	}
-	std::string id = "Player " + getPlayerCount() + 1;
+	std::string id = "Player " + std::to_string(getPlayerCount() + 1);
 	players[id] = std::pair<udp::endpoint, std::queue<json>>(playerAddress, std::queue<json>());
+	players[id].first= playerAddress;
 	setPlayerCount(getPlayerCount() + 1);
 	return id;
 }
 
 void CatGameServer::listen() {
 	std::array<char, 128> recv_buf;
+	recv_buf.fill(0);
 	while (getCurrentState() == serverStateLobby) {
 		try {
 			udp::endpoint remote_endpoint;

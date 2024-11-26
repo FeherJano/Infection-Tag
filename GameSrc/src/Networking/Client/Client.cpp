@@ -9,13 +9,14 @@ uint8_t Client::maxRetries = 3;
 
 
 
-Client::Client(const std::string& address, uint16_t port, asio::io_context& ioC): port(port),ioContext(ioC), 
-    mainSocket(ioContext), myKiller(nullptr), mySurvivor(nullptr) {
-
-    udp::resolver resolver = udp::resolver(ioContext);
+Client::Client(const std::string& address, uint16_t port, asio::io_context& ioC): port(port), 
+    mainSocket(ioC), myKiller(nullptr), mySurvivor(nullptr),recvBuf(std::array<char,maxMessageLength>()),
+    sendBuf(std::array<char, maxMessageLength>()){
+    recvBuf.fill(0);
+    sendBuf.fill(0);
+    udp::resolver resolver = udp::resolver(ioC);
     remoteSendEndp = *resolver.resolve(udp::v4(), address,std::to_string(port)).begin();
     mainSocket.open(udp::v4());
-    logInfo("Client opened socket on " << mainSocket.local_endpoint().address().to_string());
 }
 
 
@@ -33,13 +34,15 @@ std::string Client::connect() {
         }
         //TODO save player id
         std::cout << response.at("playerId")<<'\n';
+        return response.at("playerId");
     }
     catch (json::exception e) {
 
     }
     catch (std::exception e) {
-
+        std::cout << e.what();
     }
+    return "";
 }
 
 
@@ -59,10 +62,9 @@ bool Client::msgToServer(json message) {
 json Client::msgFromServer(unsigned short timeout) {
     json response;
     try {
-        
-        size_t len = mainSocket.receive_from(asio::buffer(recv_buf), remoteRecieveEndp);
-        std::cout.write(recv_buf.data(), len);
-        response = json::parse(recv_buf.data());
+        size_t len = mainSocket.receive_from(asio::buffer(recvBuf), remoteRecieveEndp);
+        logInfo("Msg from server: " << recvBuf.data());
+        response = json::parse(recvBuf.data());
     }
     catch (json::exception e) {
         logErr("Got an invalid json from server: " << e.what());

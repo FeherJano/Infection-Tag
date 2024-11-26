@@ -35,6 +35,7 @@ private:
     void initializeJoinState();
     void initializeLobbyStateHost();
     void initializeLobbyStateClient();
+    void startGame();
 
     void clearUIElements();
 
