@@ -102,12 +102,10 @@ void CatGameServer::listen() {
 			logErr("Json exception, " << e.what());
 		}
 		catch (std::exception e) {
-			logErr(e.what());
+			logErr("Server lobby state error: " << e.what());
 		}
-		
-		
-	}
 
+	}
 }
 
 
@@ -115,10 +113,13 @@ void CatGameServer::listen() {
 void CatGameServer::ServerFunction() {
 	while (1) {
 		switch (currentState) {
-		case serverStateLobby() :{
+		case serverStateLobby :{
 			std::thread ListenerThread(&CatGameServer::listen, &(*this));
 			ListenerThread.join(); //program waits here until lobby state has changed
 			break;
+		}
+		case serverStateGameStart: {
+
 		}
 		default:
 			break;

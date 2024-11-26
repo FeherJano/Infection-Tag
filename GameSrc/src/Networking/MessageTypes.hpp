@@ -7,5 +7,6 @@ namespace messageSet {
 	extern const std::string NOK;
 	extern const std::string invalidOP;
 	extern const std::string connReq;
+	extern const std::string gameInit;
 
 };

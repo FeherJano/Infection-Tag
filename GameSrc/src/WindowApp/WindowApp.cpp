@@ -15,22 +15,6 @@ WindowApp::~WindowApp() {
     }
 }
 
-void WindowApp::startServer() {
-    if (this->gameServer != nullptr)return;
-    this->gameServer = std::unique_ptr<CatGameServer>(new CatGameServer(ioContext, myPort));
-    std::thread serverThread(&CatGameServer::ServerFunction, &(*gameServer));
-    serverThread.detach();
-    gameServer->setState(serverStateLobby);
-}
-
-
-void WindowApp::startClient() {
-    if (this->player != nullptr)return;
-    currentState = AppState::GAME;
-    this->player = std::unique_ptr<Client>(new Client("localhost", 8085, ioContext));
-    this->player->connect();
-}
-
 void WindowApp::clearUIElements() {
     uiElements.clear();
 }
@@ -87,8 +71,26 @@ void WindowApp::initializeLobbyStateClient() {
 }
 
 void WindowApp::startGame() {
-
+    server->setState(serverStateGameStart);
 }
+
+
+void WindowApp::startServer() {
+    if (this->server != nullptr)return;
+    this->server = std::unique_ptr<CatGameServer>(new CatGameServer(ioContext, myPort));
+    std::thread serverThread(&CatGameServer::ServerFunction, &(*server));
+    serverThread.detach();
+    server->setState(serverStateLobby);
+}
+
+
+void WindowApp::startClient() {
+    if (this->player != nullptr)return;
+    currentState = AppState::GAME;
+    this->player = std::unique_ptr<Client>(new Client("localhost", 8085, ioContext));
+    this->player->connect();
+}
+
 
 
 // clk
