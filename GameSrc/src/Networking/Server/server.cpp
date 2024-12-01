@@ -103,8 +103,11 @@ void CatGameServer::listen() {
 			udp::endpoint remote_endpoint;
 			json request = getMsg(remote_endpoint);
 
-			//skipping everything that is not a connection request
-			if (request.at(msgTypes::msgType) != messageSet::connReq)continue;
+			//skipping everything that is not a connection request and sending it to the sender player's message queue
+			if (request.at(msgTypes::msgType) != messageSet::connReq) {
+				players[request.at(msgTypes::playerId)].second.push(request);
+				continue;
+			}
 
 			auto pId = registerPlayer(remote_endpoint);
 			//if registration was successfull, the server sends the players id to the player
@@ -168,20 +171,28 @@ void CatGameServer::ServerFunction() {
 }
 
 void CatGameServer::handlePlayer(std::string playerID) {
-	try {
-		while (currentState != serverStateExit) {
-			json prevMsg = getMsg(players[playerID].first);
+	auto msgQueue = &players[playerID].second;
+	while (currentState != serverStateExit) {
+		try {
+			if (msgQueue->empty()) {
+				std::this_thread::sleep_for(100ms);
+				continue;
+			}
+			json prevMsg = msgQueue->front();
 			if (prevMsg.at(msgTypes::msgType) == messageSet::clientReady) {
 				prevMsg.at(msgTypes::playerData) == true ? playerCount++ : playerCount--;
 				logInfo(playerID + " sent ready");
 			}
+			msgQueue->pop();
+
+		}
+		catch (json::exception e) {
+			logErr(e.what());
+		}
+		catch (std::exception e) {
+			logErr(e.what());
 		}
 	}
-	catch (json::exception e) {
-		logErr(e.what());
-	}
-	catch (std::exception e) {
-		logErr(e.what());
-	}
+	
 }
 

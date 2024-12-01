@@ -17,6 +17,7 @@ namespace msgTypes {
 	extern const std::string msgType; //each message has a message type
 	extern const std::string mapData;
 	extern const std::string playerData;
+	extern const std::string playerId;
 	
 }
 

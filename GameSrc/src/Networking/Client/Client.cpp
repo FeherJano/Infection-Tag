@@ -103,6 +103,7 @@ void Client::sendReady(bool ready) {
     json readyMsg;
     readyMsg[msgTypes::msgType] = messageSet::clientReady;
     readyMsg[msgTypes::playerData] = ready;
+    readyMsg[msgTypes::playerId] = playerId;
     msgToServer(readyMsg);
 
 }
@@ -110,4 +111,5 @@ void Client::sendReady(bool ready) {
 void Client::sendDisconnect() {
     json dcMsg;
     dcMsg[msgTypes::msgType] = messageSet::connAbort;
+    dcMsg[msgTypes::playerId] = playerId;
 }
