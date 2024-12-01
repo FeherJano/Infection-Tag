@@ -115,7 +115,7 @@ void CatGameServer::listen() {
 				json response;
 				response[msgTypes::msgType] = messageSet::OK;
 				response["playerId"] = pId;
-				mainSocket.send_to(asio::buffer(response.dump()), remote_endpoint);
+				sendMsg(remote_endpoint, response);
 				std::thread t(&CatGameServer::handlePlayer, &(*this), pId);
 				t.detach();
 			}
