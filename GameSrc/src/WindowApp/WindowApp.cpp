@@ -16,11 +16,11 @@ WindowApp::~WindowApp() {
 }
 
 void WindowApp::startServer() {
-    if (this->gameServer != nullptr)return;
-    this->gameServer = std::unique_ptr<CatGameServer>(new CatGameServer(ioContext, myPort));
-    std::thread serverThread(&CatGameServer::ServerFunction, &(*gameServer));
+    if (this->server != nullptr)return;
+    this->server = std::unique_ptr<CatGameServer>(new CatGameServer(ioContext, myPort));
+    std::thread serverThread(&CatGameServer::ServerFunction, &(*server));
     serverThread.detach();
-    gameServer->setState(serverStateLobby);
+    server->setState(serverStateLobby);
 }
 
 
@@ -87,7 +87,7 @@ void WindowApp::initializeLobbyStateClient() {
 }
 
 void WindowApp::startGame() {
-
+    server->setState(serverStateGameStart);
 }
 
 
@@ -112,7 +112,7 @@ void WindowApp::processInput() {
                     case 7: initializeMenu(); break;
                     case 10:{ startClient();  initializeLobbyStateClient(); break; }
                     case 11: initializePlayState(); break;
-                    case 12: /*currentState = AppState::GAME; */  break; // Start the game
+                    case 12: currentState = AppState::GAME; startGame();  break; // Start the game
                     case 13: initializeMenu(); break; // Quit lobby - host
                     case 14: /* TODO: Implement ready state logic */ break;
                     case 15: initializeMenu(); break; // Quit lobby - client

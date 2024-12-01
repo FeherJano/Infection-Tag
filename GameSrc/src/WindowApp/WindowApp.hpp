@@ -15,7 +15,7 @@ const std::string localhost = "localhost";
 class WindowApp {
 protected:
 
-    std::unique_ptr<CatGameServer> gameServer;
+    std::unique_ptr<CatGameServer> server;
     std::unique_ptr<Client> player;
 
     unsigned width, height;

@@ -11,8 +11,8 @@ const uint8_t CatGameServer::maxPlayers = 8;
 
 CatGameServer::CatGameServer(asio::io_context& ioC, uint16_t desiredPort) :
 	mainSocket(udp::socket(ioC, udp::endpoint(udp::v4(), desiredPort))),
-	players(std::unordered_map<std::string,std::pair<udp::endpoint,std::queue<json>>>()){
-	logInfo("Server started on adress: " << mainSocket.local_endpoint().address().to_string());
+	players(std::unordered_map<std::string,std::pair<udp::endpoint,std::queue<json>>>()),playerCount(0),currentState(serverStateIdle){
+	//log("Server started on adress: " << mainSocket.local_endpoint().address().to_string(), logLevelInfo);
 }
 
 CatGameServer::~CatGameServer() {
@@ -42,7 +42,9 @@ uint8_t CatGameServer::getPlayerCount()const {
 
 bool CatGameServer::broadcastMessage(json msg) {
 	try {
-		//TODO implement broadcast by iterating through players table and sending message to each player
+		for (auto it : players){
+			mainSocket.send_to(asio::buffer(msg.dump()), it.second.first);
+		}
 	}
 	catch (std::exception e) {
 		logErr("Failed to broadcast message on server side! Reason: " << e.what());
@@ -110,6 +112,12 @@ void CatGameServer::listen() {
 
 }
 
+
+void CatGameServer::shutDown() {
+	json abortConnection;
+	abortConnection["message_type"] = messageSet::connAbort;
+	broadcastMessage(abortConnection);
+}
 
 
 void CatGameServer::ServerFunction() {

@@ -5,4 +5,5 @@ namespace messageSet {
 	const std::string messageSet::NOK = "NOK";
 	const std::string messageSet::invalidOP = "invalidOp";
 	const std::string messageSet::connReq = "connReq";
+	const std::string messageSet::connAbort = "connAb";
 };

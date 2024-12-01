@@ -27,9 +27,10 @@ public:
 	void setPlayerCount(uint8_t pc);
 	uint8_t getPlayerCount()const;
 
-	void ServerFunction();
 	bool broadcastMessage(json msg);
 	bool sendMsg(udp::endpoint to, json msg);
+	void shutDown();
+	void ServerFunction();
 
 private:
 	uint8_t playerCount;
