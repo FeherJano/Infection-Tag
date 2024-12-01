@@ -45,6 +45,14 @@ void WindowApp::initializeMenu() {
     uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 200), sf::Vector2f(125, 50), "Settings", 2U));
     uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 300), sf::Vector2f(125, 50), "Exit", 3U));
     currentState = AppState::MENU;
+    if (player != nullptr) {
+        try {
+            player->sendDisconnect();
+        }
+        catch (std::exception e) {
+            logErr(e.what());
+        }
+    }
 }
 
 // Play state
@@ -93,6 +101,13 @@ void WindowApp::startGame() {
     server->setState(serverStateGameStart);
 }
 
+void WindowApp::playerReady() {
+    clearUIElements();
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 300), sf::Vector2f(125, 50), "Waiting...", 16U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 400), sf::Vector2f(125, 50), "Quit", 15U));
+    player->sendReady(true);
+}
+
 
 // clk
 void WindowApp::processInput() {
@@ -116,8 +131,8 @@ void WindowApp::processInput() {
                     case 10:{ startClient();  initializeLobbyStateClient(); break; }
                     case 11: initializePlayState(); break;
                     case 12: currentState = AppState::GAME; startGame();  break; // Start the game
-                    case 13: initializeMenu(); break; // Quit lobby - host
-                    case 14: /* TODO: Implement ready state logic */ break;
+                    case 13: initializeMenu(); server->shutDown(); break; // Quit lobby - host
+                    case 14: playerReady(); break;
                     case 15: initializeMenu(); break; // Quit lobby - client
                 default: break;
                 }

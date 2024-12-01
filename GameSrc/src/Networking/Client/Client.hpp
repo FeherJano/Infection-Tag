@@ -18,10 +18,12 @@ public:
 	Client(const std::string& address, uint16_t port,asio::io_context& ioC);
 	~Client() = default;
 	std::string connect();
-	bool msgToServer(json message);
+	bool msgToServer(json &message);
 	json msgFromServer();
 	void waitForGame();
 	void setState(clientState newState);
+	void sendReady(bool ready);
+	void sendDisconnect();
 
 private:
 	clientState currentState;

@@ -41,6 +41,7 @@ private:
 
     void processInput();
     void renderElements();
+    void playerReady();
 
 public:
     WindowApp(asio::io_context& ioC, const unsigned width = 800, const unsigned height = 600);

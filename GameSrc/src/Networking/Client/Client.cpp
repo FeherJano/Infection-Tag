@@ -48,7 +48,7 @@ std::string Client::connect() {
 }
 
 
-bool Client::msgToServer(json message) {
+bool Client::msgToServer(json &message) {
 
     try {
         mainSocket.send_to(asio::buffer(message.dump()), remoteSendEndp);
@@ -97,4 +97,17 @@ void Client::waitForGame() {
 
 
 
+}
+
+void Client::sendReady(bool ready) {
+    json readyMsg;
+    readyMsg[msgTypes::msgType] = messageSet::clientReady;
+    readyMsg[msgTypes::playerData] = ready;
+    msgToServer(readyMsg);
+
+}
+
+void Client::sendDisconnect() {
+    json dcMsg;
+    dcMsg[msgTypes::msgType] = messageSet::connAbort;
 }
