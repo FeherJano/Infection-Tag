@@ -70,7 +70,7 @@ bool CatGameServer::sendMsg(udp::endpoint to, json msg) {
 * 
 */
 std::string CatGameServer::registerPlayer(udp::endpoint playerAddress) {
-	if (getPlayerCount() >= maxPlayers) {
+	if (getPlayerCount() >= maxPlayers-1) { //duh because one player will be the host 
 		return "";
 	}
 	std::string id = "Player " + std::to_string(getPlayerCount() + 1);
@@ -90,11 +90,11 @@ void CatGameServer::listen() {
 			json request = json::parse(recv_buf.data());
 
 			//skipping everything that is not a connection request
-			if (request.at("message_type") != messageSet::connReq)continue;
+			if (request.at(msgTypes::msgType) != messageSet::connReq)continue;
 			auto pId = registerPlayer(remote_endpoint);
 			if (pId != "") {
 				json response;
-				response["message_type"] = messageSet::OK;
+				response[msgTypes::msgType] = messageSet::OK;
 				response["playerId"] = pId;
 				mainSocket.send_to(asio::buffer(response.dump()), remote_endpoint);
 			}
@@ -115,19 +115,32 @@ void CatGameServer::listen() {
 
 void CatGameServer::shutDown() {
 	json abortConnection;
-	abortConnection["message_type"] = messageSet::connAbort;
+	abortConnection[msgTypes::msgType] = messageSet::connAbort;
 	broadcastMessage(abortConnection);
+}
+
+bool CatGameServer::startGame() {
+	json startSignal;
+	startSignal[msgTypes::msgType] = messageSet::gameStart;
+	broadcastMessage(startSignal);
+
+	return true;
 }
 
 
 void CatGameServer::ServerFunction() {
 	while (1) {
 		switch (currentState) {
-		case serverStateLobby() :{
+		case serverStateLobby:{
 			std::thread ListenerThread(&CatGameServer::listen, &(*this));
 			ListenerThread.join(); //program waits here until lobby state has changed
 			break;
 		}
+		case serverStateGameStart: {
+			
+			break;
+		}
+
 		default:
 			break;
 		}
@@ -136,24 +149,4 @@ void CatGameServer::ServerFunction() {
 	
 
 }
-
-
-		/*this belonged to the serverfunction
-		try {
-
-			if (0) {
-				std::array<char, 1024> recv_buf;
-				udp::endpoint remote_endpoint;
-				auto len = mainSocket.receive_from(asio::buffer(recv_buf), remote_endpoint);
-				std::cout.write(recv_buf.data(), len);
-				std::cout << '\n';
-				std::string response = "Hey little fella on: " + remote_endpoint.address().to_string();
-				std::error_code ignored_error;
-				mainSocket.send_to(asio::buffer(response),
-					remote_endpoint, 0, ignored_error);
-			}
-		}
-		catch (std::exception e) {
-			logErr(e.what());
-		}*/
 

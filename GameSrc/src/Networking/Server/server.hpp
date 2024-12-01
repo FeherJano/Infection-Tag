@@ -39,6 +39,7 @@ private:
 	std::unordered_map<std::string, std::pair<udp::endpoint,std::queue<json>>> players; //hasmap - key: playerId, value: a pair of adress and message queue of the player 
 	void listen();
 	std::string registerPlayer(udp::endpoint playerAddress);
+	bool startGame();
 	
 
 };

@@ -3,15 +3,13 @@
 #include <thread>
 #include "asio.hpp"
 
-uint8_t Client::connTimeoutSec = 1;
-uint8_t Client::timeoutMs = 100;
 uint8_t Client::maxRetries = 3;
 
 
 
 Client::Client(const std::string& address, uint16_t port, asio::io_context& ioC): port(port), 
     mainSocket(ioC), myKiller(nullptr), mySurvivor(nullptr),recvBuf(std::array<char,maxMessageLength>()),
-    sendBuf(std::array<char, maxMessageLength>()){
+    sendBuf(std::array<char, maxMessageLength>()),currentState(cStateMenu){
     recvBuf.fill(0);
     sendBuf.fill(0);
     udp::resolver resolver = udp::resolver(ioC);
@@ -19,17 +17,21 @@ Client::Client(const std::string& address, uint16_t port, asio::io_context& ioC)
     mainSocket.open(udp::v4());
 }
 
+void Client::setState(clientState newS) {
+    currentState = newS;
+}
+
 
 std::string Client::connect() {
     try {
         json connMsg;
-        connMsg["message_type"] = messageSet::connReq;
+        connMsg[msgTypes::msgType] = messageSet::connReq;
         int retries = 0;
         while (!msgToServer(connMsg) && retries < maxRetries) {
             retries++;
         }
         json response = msgFromServer();
-        if (response.at("message_type") != messageSet::OK) {
+        if (response.at(msgTypes::msgType) != messageSet::OK) {
             return "";
         }
         playerId = response.at("playerId").template get<std::string>();
@@ -37,10 +39,10 @@ std::string Client::connect() {
         return playerId;
     }
     catch (json::exception e) {
-
+        logErr(e.what());
     }
     catch (std::exception e) {
-        std::cout << e.what();
+        logErr(e.what());
     }
     return "";
 }
@@ -59,7 +61,7 @@ bool Client::msgToServer(json message) {
 
 }
 
-json Client::msgFromServer(unsigned short timeout) {
+json Client::msgFromServer() {
     json response;
     try {
         size_t len = mainSocket.receive_from(asio::buffer(recvBuf), remoteRecieveEndp);
@@ -73,5 +75,26 @@ json Client::msgFromServer(unsigned short timeout) {
         logErr("Error during recieving from server!"<<e.what());
     }
     return response;
+
+}
+
+
+void Client::waitForGame() {
+    while (currentState == cStateWaitGame) {
+        try {
+            json msg = msgFromServer();
+            if (msg.at(msgTypes::msgType) == messageSet::gameStart) {
+                currentState = cStateStartGame;
+            }
+        }
+        catch (json::exception e) {
+            logErr(e.what());
+        }
+        catch (std::exception e) {
+            logErr("Fatal during waiting to start, " << e.what());
+        }
+    }
+
+
 
 }
