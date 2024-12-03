@@ -157,7 +157,7 @@ void WindowApp::processInput() {
             clearUIElements();
         }
     }
-}
+}   
 
 void WindowApp::renderElements() {
     mainWindow->clear(sf::Color::Black);

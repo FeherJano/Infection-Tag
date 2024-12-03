@@ -88,6 +88,10 @@ void Client::waitForGame() {
     while (currentState == cStateWaitGame) {
         try {
             json msg = msgFromServer();
+            if (msg.empty()) {
+                std::this_thread::sleep_for(100ms);
+                continue;
+            }
             if (msg.at(msgTypes::msgType) == messageSet::gameStart) {
                 currentState = cStateStartGame;
             }
