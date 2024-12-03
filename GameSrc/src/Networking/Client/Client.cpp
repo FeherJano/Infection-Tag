@@ -15,6 +15,10 @@ Client::Client(const std::string& address, uint16_t port, asio::io_context& ioC)
     udp::resolver resolver = udp::resolver(ioC);
     remoteSendEndp = *resolver.resolve(udp::v4(), address,std::to_string(port)).begin();
     mainSocket.open(udp::v4());
+    mainSocket.set_option(asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{1000});
+}
+clientState Client::getState()const{
+    return currentState;
 }
 
 void Client::setState(clientState newS) {
@@ -62,6 +66,7 @@ bool Client::msgToServer(json &message) {
 }
 
 json Client::msgFromServer() {
+    recvBuf.fill(0);
     json response;
     try {
         size_t len = mainSocket.receive_from(asio::buffer(recvBuf), remoteRecieveEndp);
@@ -94,6 +99,7 @@ void Client::waitForGame() {
             logErr("Fatal during waiting to start, " << e.what());
         }
     }
+    logInfo("Client exited waiting phase");
 
 
 
@@ -105,11 +111,14 @@ void Client::sendReady(bool ready) {
     readyMsg[msgTypes::playerData] = ready;
     readyMsg[msgTypes::playerId] = playerId;
     msgToServer(readyMsg);
+    currentState = cStateWaitGame;
 
 }
 
 void Client::sendDisconnect() {
+    setState(cStateExit);
     json dcMsg;
     dcMsg[msgTypes::msgType] = messageSet::connAbort;
     dcMsg[msgTypes::playerId] = playerId;
+    msgToServer(dcMsg);
 }

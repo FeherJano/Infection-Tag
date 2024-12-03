@@ -8,7 +8,7 @@
 using asio::ip::udp;
 using json = nlohmann::json;
 
-enum clientState{cStateMenu,cStateWaitGame,cStateStartGame,cStateRunGame};
+enum clientState{cStateMenu,cStateWaitGame,cStateStartGame,cStateRunGame,cStateExit};
 
 class Client {
 public:
@@ -17,11 +17,12 @@ public:
 
 	Client(const std::string& address, uint16_t port,asio::io_context& ioC);
 	~Client() = default;
+	clientState getState()const;
+	void setState(clientState newState);
 	std::string connect();
 	bool msgToServer(json &message);
 	json msgFromServer();
 	void waitForGame();
-	void setState(clientState newState);
 	void sendReady(bool ready);
 	void sendDisconnect();
 

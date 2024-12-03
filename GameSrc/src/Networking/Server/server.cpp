@@ -10,9 +10,10 @@ const uint8_t CatGameServer::maxPlayers = 8;
 
 CatGameServer::CatGameServer(asio::io_context& ioC, uint16_t desiredPort) :
 	mainSocket(udp::socket(ioC, udp::endpoint(udp::v4(), desiredPort))),
-	players(std::unordered_map<std::string,std::pair<udp::endpoint,std::queue<json>>>()),playerCount(0),currentState(serverStateIdle){
+	players(std::unordered_map<std::string,std::pair<udp::endpoint,std::queue<json>>>()),playerCount(1),currentState(serverStateIdle){
 	readyPlayers = 1;
 	recvBuf = std::array<char, maximumMessageLength>();
+	mainSocket.set_option(asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{1000});
 	//log("Server started on adress: " << mainSocket.local_endpoint().address().to_string(), logLevelInfo);
 }
 
@@ -76,7 +77,11 @@ json CatGameServer::getMsg(udp::endpoint & from) {
 	}
 	catch (json::exception e) {
 		logErr(e.what());
-	}catch (std::exception e) {
+	}
+	catch (asio::system_error e) {
+		return msg;
+	}
+	catch (std::exception e) {
 		logErr(e.what());
 	}
 	return msg;
@@ -102,6 +107,7 @@ void CatGameServer::listen() {
 		try {
 			udp::endpoint remote_endpoint;
 			json request = getMsg(remote_endpoint);
+			if (request.empty())continue;
 
 			//skipping everything that is not a connection request and sending it to the sender player's message queue
 			if (request.at(msgTypes::msgType) != messageSet::connReq) {
@@ -157,7 +163,7 @@ void CatGameServer::ServerFunction() {
 			break;
 		}
 		case serverStateGameStart: {
-			//TODO implement start logic
+			startGame();
 			break;
 		}
 
@@ -178,8 +184,16 @@ void CatGameServer::handlePlayer(std::string playerID) {
 			}
 			json prevMsg = msgQueue->front();
 			if (prevMsg.at(msgTypes::msgType) == messageSet::clientReady) {
-				prevMsg.at(msgTypes::playerData) == true ? playerCount++ : playerCount--;
+				prevMsg.at(msgTypes::playerData) == true ? readyPlayers++ : readyPlayers--;
 				logInfo(playerID + " sent ready");
+			}
+			if (prevMsg.at(msgTypes::msgType) == messageSet::connAbort) {
+				msgQueue->pop();
+				players.erase(playerID);
+				setPlayerCount(getPlayerCount() - 1);
+				logInfo(playerID + " disconnected");
+				readyPlayers--;
+				break;
 			}
 			msgQueue->pop();
 

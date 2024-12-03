@@ -48,7 +48,7 @@ public:
     ~WindowApp();
 
     void startServer();
-    void startClient();
+    bool startClient();
 
     int main();
 };

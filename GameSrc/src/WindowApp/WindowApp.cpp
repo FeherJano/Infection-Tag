@@ -24,14 +24,14 @@ void WindowApp::startServer() {
 }
 
 
-void WindowApp::startClient() {
-    if (this->player != nullptr)return;
+bool WindowApp::startClient() {
+    if (this->player != nullptr)return false;
     currentState = AppState::GAME;
     this->player = std::unique_ptr<Client>(new Client("localhost", 8085, ioContext));
     if (this->player->connect() == "") {
-        initializeMenu();
-        currentState = AppState::MENU;
+        return false;
     }
+    return true;
 }
 
 void WindowApp::clearUIElements() {
@@ -48,6 +48,9 @@ void WindowApp::initializeMenu() {
     if (player != nullptr) {
         try {
             player->sendDisconnect();
+            Client * p = player.release();
+            delete p;
+            p = nullptr;
         }
         catch (std::exception e) {
             logErr(e.what());
@@ -102,10 +105,13 @@ void WindowApp::startGame() {
 }
 
 void WindowApp::playerReady() {
+    currentState = AppState::LOBBY_CLIENT_READY;
     clearUIElements();
     uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 300), sf::Vector2f(125, 50), "Waiting...", 16U));
     uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(width / 2 - 100, 400), sf::Vector2f(125, 50), "Quit", 15U));
     player->sendReady(true);
+    std::thread t = std::thread(&Client::waitForGame, &(*player.get()));
+    t.detach();
 }
 
 
@@ -126,19 +132,29 @@ void WindowApp::processInput() {
                     case 2: initializeSettingsState(); break;
                     case 3: mainWindow->close(); break;
                     case 4: initializeJoinState(); break;
-                    case 5: startServer(); initializeLobbyStateHost(); break;
+                    case 5: { //Host clicks on "host" button
+                        startServer(); 
+                        initializeLobbyStateHost(); 
+                        break;
+                    }
                     case 6: initializeMenu(); break;
                     case 7: initializeMenu(); break;
-                    case 10:{ startClient();  initializeLobbyStateClient(); break; }
+                    case 10:{ 
+                        startClient() ? initializeLobbyStateClient() : initializeMenu();
+                        break; 
+                    }
                     case 11: initializePlayState(); break;
                     case 12: currentState = AppState::GAME; startGame();  break; // Start the game
                     case 13: initializeMenu(); server->shutDown(); break; // Quit lobby - host
-                    case 14: playerReady(); break;
+                    case 14: playerReady(); break; //Client ready in lobby
                     case 15: initializeMenu(); break; // Quit lobby - client
                 default: break;
                 }
                 break;
             }
+        }
+        if (currentState == AppState::LOBBY_CLIENT_READY && player->getState()==cStateStartGame) {
+            clearUIElements();
         }
     }
 }
