@@ -5,14 +5,15 @@
 #include  <array>
 
 const uint16_t CatGameServer::defaultPort = 8085;
-const uint32_t CatGameServer::maximumMessageLength = 2048;
 const uint8_t CatGameServer::maxPlayers = 8;
 
 
 CatGameServer::CatGameServer(asio::io_context& ioC, uint16_t desiredPort) :
 	mainSocket(udp::socket(ioC, udp::endpoint(udp::v4(), desiredPort))),
-	players(std::unordered_map<std::string,std::pair<udp::endpoint,std::queue<json>>>()){
-	logInfo("Server started on adress: " << mainSocket.local_endpoint().address().to_string());
+	players(std::unordered_map<std::string,std::pair<udp::endpoint,std::queue<json>>>()),playerCount(0),currentState(serverStateIdle){
+	readyPlayers = 1;
+	recvBuf = std::array<char, maximumMessageLength>();
+	//log("Server started on adress: " << mainSocket.local_endpoint().address().to_string(), logLevelInfo);
 }
 
 CatGameServer::~CatGameServer() {
@@ -42,7 +43,9 @@ uint8_t CatGameServer::getPlayerCount()const {
 
 bool CatGameServer::broadcastMessage(json msg) {
 	try {
-		//TODO implement broadcast by iterating through players table and sending message to each player
+		for (auto it : players){
+			mainSocket.send_to(asio::buffer(msg.dump()), it.second.first);
+		}
 	}
 	catch (std::exception e) {
 		logErr("Failed to broadcast message on server side! Reason: " << e.what());
@@ -63,12 +66,28 @@ bool CatGameServer::sendMsg(udp::endpoint to, json msg) {
 	return true;
 }
 
+json CatGameServer::getMsg(udp::endpoint & from) {
+	recvBuf.fill(0);
+	json msg;
+	try {
+		auto len = mainSocket.receive_from(asio::buffer(recvBuf), from);
+		msg = json::parse(recvBuf.data());
+		return msg;
+	}
+	catch (json::exception e) {
+		logErr(e.what());
+	}catch (std::exception e) {
+		logErr(e.what());
+	}
+	return msg;
+}
+
 /*@param playerAddress the address of the player to be registered
 * @returns the playerID of the registered player or empty string if registration failed.
 * 
 */
 std::string CatGameServer::registerPlayer(udp::endpoint playerAddress) {
-	if (getPlayerCount() >= maxPlayers) {
+	if (getPlayerCount() >= maxPlayers-1) { //duh because one player will be the host 
 		return "";
 	}
 	std::string id = "Player " + std::to_string(getPlayerCount() + 1);
@@ -79,22 +98,26 @@ std::string CatGameServer::registerPlayer(udp::endpoint playerAddress) {
 }
 
 void CatGameServer::listen() {
-	std::array<char, 128> recv_buf;
-	recv_buf.fill(0);
 	while (getCurrentState() == serverStateLobby) {
 		try {
 			udp::endpoint remote_endpoint;
-			auto len = mainSocket.receive_from(asio::buffer(recv_buf), remote_endpoint);
-			json request = json::parse(recv_buf.data());
+			json request = getMsg(remote_endpoint);
 
-			//skipping everything that is not a connection request
-			if (request.at("message_type") != messageSet::connReq)continue;
+			//skipping everything that is not a connection request and sending it to the sender player's message queue
+			if (request.at(msgTypes::msgType) != messageSet::connReq) {
+				players[request.at(msgTypes::playerId)].second.push(request);
+				continue;
+			}
+
 			auto pId = registerPlayer(remote_endpoint);
+			//if registration was successfull, the server sends the players id to the player
 			if (pId != "") {
 				json response;
-				response["message_type"] = messageSet::OK;
+				response[msgTypes::msgType] = messageSet::OK;
 				response["playerId"] = pId;
-				mainSocket.send_to(asio::buffer(response.dump()), remote_endpoint);
+				sendMsg(remote_endpoint, response);
+				std::thread t(&CatGameServer::handlePlayer, &(*this), pId);
+				t.detach();
 			}
 
 		}
@@ -109,44 +132,65 @@ void CatGameServer::listen() {
 }
 
 
+void CatGameServer::shutDown() {
+	json abortConnection;
+	abortConnection[msgTypes::msgType] = messageSet::connAbort;
+	broadcastMessage(abortConnection);
+	setState(serverStateExit);
+}
+
+bool CatGameServer::startGame() {
+	json startSignal;
+	startSignal[msgTypes::msgType] = messageSet::gameStart;
+	broadcastMessage(startSignal);
+
+	return true;
+}
+
 
 void CatGameServer::ServerFunction() {
-	while (1) {
+	while (currentState!=serverStateExit) {
 		switch (currentState) {
-		case serverStateLobby :{
+		case serverStateLobby: {
 			std::thread ListenerThread(&CatGameServer::listen, &(*this));
 			ListenerThread.join(); //program waits here until lobby state has changed
 			break;
 		}
 		case serverStateGameStart: {
-
+			//TODO implement start logic
+			break;
 		}
+
 		default:
 			break;
 		}
 	}
-	
-	
 
 }
 
-
-		/*this belonged to the serverfunction
+void CatGameServer::handlePlayer(std::string playerID) {
+	auto msgQueue = &players[playerID].second;
+	while (currentState != serverStateExit) {
 		try {
-
-			if (0) {
-				std::array<char, 1024> recv_buf;
-				udp::endpoint remote_endpoint;
-				auto len = mainSocket.receive_from(asio::buffer(recv_buf), remote_endpoint);
-				std::cout.write(recv_buf.data(), len);
-				std::cout << '\n';
-				std::string response = "Hey little fella on: " + remote_endpoint.address().to_string();
-				std::error_code ignored_error;
-				mainSocket.send_to(asio::buffer(response),
-					remote_endpoint, 0, ignored_error);
+			if (msgQueue->empty()) {
+				std::this_thread::sleep_for(100ms);
+				continue;
 			}
+			json prevMsg = msgQueue->front();
+			if (prevMsg.at(msgTypes::msgType) == messageSet::clientReady) {
+				prevMsg.at(msgTypes::playerData) == true ? playerCount++ : playerCount--;
+				logInfo(playerID + " sent ready");
+			}
+			msgQueue->pop();
+
+		}
+		catch (json::exception e) {
+			logErr(e.what());
 		}
 		catch (std::exception e) {
 			logErr(e.what());
-		}*/
+		}
+	}
+	
+}
 

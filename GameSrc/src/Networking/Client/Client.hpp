@@ -8,20 +8,25 @@
 using asio::ip::udp;
 using json = nlohmann::json;
 
+enum clientState{cStateMenu,cStateWaitGame,cStateStartGame,cStateRunGame};
+
 class Client {
 public:
 	const static uint32_t maxMessageLength = 2048;
-	static uint8_t connTimeoutSec;
 	static uint8_t maxRetries;
-	static uint8_t timeoutMs;
 
 	Client(const std::string& address, uint16_t port,asio::io_context& ioC);
 	~Client() = default;
 	std::string connect();
-	bool msgToServer(json message);
-	json msgFromServer(unsigned short timeOut = timeoutMs);
+	bool msgToServer(json &message);
+	json msgFromServer();
+	void waitForGame();
+	void setState(clientState newState);
+	void sendReady(bool ready);
+	void sendDisconnect();
 
 private:
+	clientState currentState;
 	uint16_t port;
 	udp::endpoint remoteSendEndp;
 	udp::endpoint remoteRecieveEndp;
