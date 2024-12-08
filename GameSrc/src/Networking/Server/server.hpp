@@ -6,13 +6,17 @@
 #include "asio.hpp"
 #include "../../Utility/logging.hpp"
 #include "../MessageTypes.hpp"
+#include "../../task.hpp"
+#include "../../map.hpp"
+
+
 using namespace std::chrono_literals;
 using json = nlohmann::json;
 using asio::ip::udp;
 
 enum serverState{serverStateLobby,serverStateGameStart,serverStateGameRun,serverStateIdle, serverStateExit};
 
-const uint32_t maximumMessageLength = 2048;
+const uint32_t maximumMessageLength = 8192;
 class CatGameServer{
 public:	
 	
@@ -32,8 +36,10 @@ public:
 	json getMsg(udp::endpoint &from);
 	void shutDown();
 	void ServerFunction();
+	void setupGameState();
 
 private:
+
 	uint8_t playerCount;
 	uint8_t readyPlayers;
 	serverState currentState;
@@ -44,7 +50,6 @@ private:
 	std::string registerPlayer(udp::endpoint playerAddress);
 	bool startGame();
 	void handlePlayer(std::string playerID);
-
-	
+	std::vector<std::vector<std::pair<int, int>>> compressMap(const std::vector<std::vector<int>>& map);
 
 };

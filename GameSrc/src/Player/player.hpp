@@ -6,7 +6,9 @@
 #include <array>
 #include "../map.hpp"
 #include "../game_constants.hpp"
+#include "nlohmann/json.hpp"
 
+using json = nlohmann::json;
 
 class Player {
 
@@ -23,7 +25,7 @@ public:
     Player(float startX, float startY, float speed, std::array<sf::Keyboard::Key, 4>);
     void move(float deltaTime, const std::vector<std::vector<int>>& maze);
     virtual void update(float deltaTime);
-    virtual void render(sf::RenderWindow& window) = 0;
+    virtual void render(sf::RenderWindow& window) const = 0;
 };
 
 class Survivor : public Player {
@@ -37,16 +39,25 @@ public:
     void getHit();
     void heal();
     void update(float deltaTime) override;
-    void render(sf::RenderWindow& window) override;
+    void render(sf::RenderWindow& window) const override;
+
+    json to_json() const;
+    void from_json(const json& j);
+
 };
 
 class Killer : public Player {
 public:
+    Killer() : Player(0.0f, 0.0f, 0.0f, { sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown }) {}
+
     Killer(float startX, float startY, std::array<sf::Keyboard::Key, 4>);
     bool canHit();
     void hit(Survivor& survivor);
     void update(float deltaTime) override;
-    void render(sf::RenderWindow& window) override;
+    void render(sf::RenderWindow& window) const override;
+
+    json to_json();
+    void from_json(const json& j);
 };
 
 bool checkCollisionForKiller(Killer& killer, Survivor& survivor);

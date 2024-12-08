@@ -2,10 +2,9 @@
 #include "../../Utility/logging.hpp"
 #include <thread>
 #include "asio.hpp"
+#include "../../WindowApp/WindowApp.hpp"
 
 uint8_t Client::maxRetries = 3;
-
-
 
 Client::Client(const std::string& address, uint16_t port, asio::io_context& ioC): port(port), 
     mainSocket(ioC), myKiller(nullptr), mySurvivor(nullptr),recvBuf(std::array<char,maxMessageLength>()),
@@ -84,6 +83,10 @@ json Client::msgFromServer() {
 }
 
 
+void Client::setGameStateCallback(GameStateCallback callback) {
+    gameStateCallback = std::move(callback);
+}
+
 void Client::waitForGame() {
     while (currentState == cStateWaitGame) {
         try {
@@ -95,19 +98,23 @@ void Client::waitForGame() {
             if (msg.at(msgTypes::msgType) == messageSet::gameStart) {
                 currentState = cStateStartGame;
             }
+            else if (msg.at(msgTypes::msgType) == messageSet::gameState) {
+                if (gameStateCallback) {
+                    gameStateCallback(msg); // Callback meghívása
+                }
+            }
         }
-        catch (json::exception e) {
+        catch (json::exception& e) {
             logErr(e.what());
         }
-        catch (std::exception e) {
+        catch (std::exception& e) {
             logErr("Fatal during waiting to start, " << e.what());
         }
     }
     logInfo("Client exited waiting phase");
-
-
-
 }
+
+
 
 void Client::sendReady(bool ready) {
     json readyMsg;

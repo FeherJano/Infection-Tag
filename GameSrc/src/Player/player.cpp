@@ -1,4 +1,4 @@
-#include "player.hpp"
+﻿#include "player.hpp"
 #include "../map.hpp"
 #include "../game_constants.hpp"
 
@@ -119,7 +119,7 @@ void Survivor::update(float deltaTime)  {
     }
 }
 
-void Survivor::render(sf::RenderWindow& window) {
+void Survivor::render(sf::RenderWindow& window) const {
     sf::RectangleShape survivorShape(sf::Vector2f(CELL_SIZE, CELL_SIZE));
     survivorShape.setPosition(position);
 
@@ -193,6 +193,7 @@ void Survivor::render(sf::RenderWindow& window) {
     }
 }
 
+
 Killer::Killer(float startX,
                float startY,
                std::array<sf::Keyboard::Key, 4> movementKeys) :
@@ -222,7 +223,7 @@ void Killer::update(float deltaTime) {
     }
 }
 
-void Killer::render(sf::RenderWindow& window) {
+void Killer::render(sf::RenderWindow& window) const {
     sf::RectangleShape killerShape(sf::Vector2f(CELL_SIZE, CELL_SIZE));
     killerShape.setPosition(position);
     killerShape.setFillColor(sf::Color::Red);
@@ -258,3 +259,33 @@ void checkCollisionBetweenSurvivors(std::vector<Survivor>& survivors) {
     }
 }
 
+json Survivor::to_json() const {
+    return {
+        {"position", {position.x, position.y}},
+        {"healthState", healthState},
+        {"speedBoostTimer", speedBoostTimer},
+        {"dyingTimer", dyingTimer}
+    };
+}
+
+
+void Survivor::from_json(const json& j) {
+    position.x = j.at("position").at(0);
+    position.y = j.at("position").at(1);
+    healthState = j.at("healthState");
+    speedBoostTimer = j.at("speedBoostTimer");
+    dyingTimer = j.at("dyingTimer");
+}
+
+json Killer::to_json() {
+    return {
+        {"position", {position.x, position.y}},
+        {"lastDirection", {lastDirection.x, lastDirection.y}},
+        {"moveSpeed", moveSpeed}
+    };
+}
+
+void Killer::from_json(const json& j) {
+    position.x = j.at("position").at(0);
+    position.y = j.at("position").at(1);
+}

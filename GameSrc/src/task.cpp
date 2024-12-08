@@ -14,7 +14,7 @@ void Task::update(float deltaTime, int numSurvivorsOnTask) {
     }
 }
 
-void Task::render(sf::RenderWindow& window, bool isVisible, bool showFullMap) {
+void Task::render(sf::RenderWindow& window, bool isVisible, bool showFullMap) const {
     if (!isVisible && !showFullMap) {
         return; // Don't render if not visible and not in full map view
     }

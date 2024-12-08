@@ -4,15 +4,17 @@
 #include "asio.hpp"
 #include "../../Player/player.hpp"
 #include "../MessageTypes.hpp"
+#include <functional>
 
 using asio::ip::udp;
 using json = nlohmann::json;
+using GameStateCallback = std::function<void(const json&)>;
 
 enum clientState{cStateMenu,cStateWaitGame,cStateStartGame,cStateRunGame,cStateExit};
 
 class Client {
 public:
-	const static uint32_t maxMessageLength = 2048;
+	const static uint32_t maxMessageLength = 8192;
 	static uint8_t maxRetries;
 
 	Client(const std::string& address, uint16_t port,asio::io_context& ioC);
@@ -22,11 +24,15 @@ public:
 	std::string connect();
 	bool msgToServer(json &message);
 	json msgFromServer();
+	void setGameStateCallback(GameStateCallback callback);
 	void waitForGame();
 	void sendReady(bool ready);
 	void sendDisconnect();
 
 private:
+	GameStateCallback gameStateCallback; // A callback tárolása
+	
+
 	clientState currentState;
 	uint16_t port;
 	udp::endpoint remoteSendEndp;

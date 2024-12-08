@@ -1,8 +1,11 @@
-#include "Server.hpp"
+﻿#include "Server.hpp"
 #include <iostream>
 #include <thread>
 #include "../../Utility/logging.hpp"
 #include  <array>
+#include <vector>
+#include <utility>
+
 
 const uint16_t CatGameServer::defaultPort = 8085;
 const uint8_t CatGameServer::maxPlayers = 8;
@@ -206,5 +209,76 @@ void CatGameServer::handlePlayer(std::string playerID) {
 		}
 	}
 	
+}
+
+// Tömörítés megvalósítása
+std::vector<std::vector<std::pair<int, int>>> CatGameServer::compressMap(const std::vector<std::vector<int>>& map) {
+	std::vector<std::vector<std::pair<int, int>>> compressedMap;
+	for (const auto& row : map) {
+		std::vector<std::pair<int, int>> compressedRow;
+		int currentValue = row[0];
+		int count = 0;
+
+		for (const auto& cell : row) {
+			if (cell == currentValue) {
+				++count;
+			}
+			else {
+				compressedRow.emplace_back(currentValue, count);
+				currentValue = cell;
+				count = 1;
+			}
+		}
+		compressedRow.emplace_back(currentValue, count); // Az utolsó szakasz hozzáadása
+		compressedMap.push_back(compressedRow);
+	}
+	return compressedMap;
+}
+
+
+void CatGameServer::setupGameState() {
+	std::vector<std::vector<int>> maze(HEIGHT, std::vector<int>(WIDTH, 0));
+	placeObjects(maze);
+
+	// Helyezi el a feladatokat
+	std::vector<Task> tasks;
+	placeTasks(tasks, maze, playerCount - 1);
+
+	// Játékosok elhelyezése
+	std::vector<Survivor> survivors;
+	Killer killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+	for (uint8_t i = 0; i < playerCount - 1; ++i) {
+		survivors.emplace_back(Survivor(rand() % WIDTH, rand() % HEIGHT, { sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Left, sf::Keyboard::Right }));
+	}
+
+	// JSON generálása
+	json gameState;
+
+	gameState["msg_type"] = messageSet::gameState;
+
+	// Pálya hozzáadása
+	std::vector<std::vector<std::pair<int, int>>> compressedMap = compressMap(maze);
+	gameState["map"] = compressedMap;
+
+	// Feladatok JSON-reprezentáció
+	json tasksJson = json::array();
+	for (const auto& task : tasks) {
+		tasksJson.push_back(task.to_json());
+	}
+	gameState["tasks"] = tasksJson;
+
+	// Túlélők JSON-reprezentáció
+	json survivorsJson = json::array();
+	for (const auto& survivor : survivors) {
+		survivorsJson.push_back(survivor.to_json());
+	}
+	gameState["players"] = survivorsJson;
+
+	// Gyilkos JSON-reprezentáció
+	gameState["killer"] = killer.to_json(); // Meghívjuk az objektum saját metódusát
+
+
+	// Játékosoknak kiküldése
+	broadcastMessage(gameState);
 }
 

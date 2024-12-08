@@ -2,6 +2,7 @@
 #include "structures.hpp"
 #include "game_constants.hpp"
 #include <random>
+#include <iostream>
 
 
 bool isBlocked(int gridX, int gridY, const std::vector<std::vector<int>>& maze) {

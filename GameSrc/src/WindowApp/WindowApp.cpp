@@ -1,8 +1,7 @@
 ﻿#include "WindowApp.hpp"
 #include <iostream>
 
-WindowApp::WindowApp(asio::io_context& ioC, const unsigned width, const unsigned height)
-    : width(width), height(height), mainWindow(nullptr), currentState(AppState::MENU), ioContext(ioC) {
+WindowApp::WindowApp(asio::io_context& ioC, const unsigned width, const unsigned height): width(width), height(height), mainWindow(nullptr), currentState(AppState::MENU), ioContext(ioC) {
     mainWindow = new sf::RenderWindow(sf::VideoMode(width, height), "Freaking Cats");
     initializeMenu();
 }
@@ -31,6 +30,14 @@ bool WindowApp::startClient() {
     if (this->player->connect() == "") {
         return false;
     }
+
+    this->player->setGameStateCallback([this](const json& gameState) {
+        this->processGameState(gameState); // A játékállapot feldolgozása
+        });
+
+    std::thread t(&Client::waitForGame, player.get());
+    t.detach();
+
     return true;
 }
 
@@ -101,8 +108,16 @@ void WindowApp::initializeLobbyStateClient() {
 }
 
 void WindowApp::startGame() {
-    server->setState(serverStateGameStart);
+    if (server) {
+        server->setState(serverStateGameStart);
+        server->setupGameState();
+    }
+    if (player) {
+        player->setState(cStateRunGame);
+    }
+    currentState = AppState::GAME;
 }
+
 
 void WindowApp::playerReady() {
     currentState = AppState::LOBBY_CLIENT_READY;
@@ -159,6 +174,70 @@ void WindowApp::processInput() {
     }
 }   
 
+// Tömörített map visszaállítása
+std::vector<std::vector<int>> WindowApp::decompressMap(const std::vector<std::vector<std::pair<int, int>>>& compressedMap) {
+    std::vector<std::vector<int>> decompressedMap;
+    for (const auto& compressedRow : compressedMap) {
+        std::vector<int> row;
+        for (const auto& [value, count] : compressedRow) {
+            row.insert(row.end(), count, value); // Az értékek kibontása
+        }
+        decompressedMap.push_back(row);
+    }
+    return decompressedMap;
+}
+
+void WindowApp::processGameState(const json& gameState) {
+    // Térkép betöltése
+    auto compressedMap = gameState["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
+    maze = decompressMap(compressedMap); // Map visszaállítása
+
+    // Feladatok betöltése
+    tasks.clear();
+    for (const auto& taskJson : gameState["tasks"]) {
+        Task task(taskJson["position"][0], taskJson["position"][1]);
+        task.progress = taskJson["progress"];
+        tasks.push_back(task);
+    }
+
+    // Túlélők betöltése
+    survivors.clear();
+    for (const auto& survivorJson : gameState["players"]) {
+        Survivor survivor(survivorJson["position"][0], survivorJson["position"][1],
+            { sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Left, sf::Keyboard::Right });
+        survivor.healthState = survivorJson["healthState"];
+        survivor.speedBoostTimer = survivorJson["speedBoostTimer"];
+        survivor.dyingTimer = survivorJson["dyingTimer"];
+        survivors.push_back(survivor);
+    }
+
+    // Gyilkos betöltése
+    killer = Killer(gameState["killer"]["position"][0], gameState["killer"]["position"][1],
+        { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+}
+
+void WindowApp::renderGameState() {
+    mainWindow->clear(sf::Color::Black);
+
+    // Pálya megjelenítése
+    renderMap(*mainWindow, maze, killer, survivors, true);
+
+    // Feladatok megjelenítése
+    for (const auto& task : tasks) {
+        task.render(*mainWindow, true, false);
+    }
+
+    // Játékosok megjelenítése
+    for (const auto& survivor : survivors) {
+        survivor.render(*mainWindow);
+    }
+    killer.render(*mainWindow);
+
+    mainWindow->display();
+}
+
+
+
 void WindowApp::renderElements() {
     mainWindow->clear(sf::Color::Black);
     for (const auto& element : uiElements) {
@@ -172,8 +251,17 @@ void WindowApp::renderElements() {
 int WindowApp::main() {
     while (mainWindow->isOpen()) {
         processInput();
-        renderElements();
+
+        if (currentState == AppState::GAME) {
+            renderGameState(); // Játék renderelése
+        }
+        else {
+            renderElements(); // Egyéb UI elemek renderelése
+        }
+
         ioContext.poll();
+        std::this_thread::sleep_for(16ms); // ~60 FPS
     }
     return 0;
 }
+

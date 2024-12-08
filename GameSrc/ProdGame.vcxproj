@@ -121,7 +121,7 @@
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\dependencies\SFML\include;%(AdditionalIncludeDirectories);$(SolutionDir)dependencies\Json\single_include\;$(SolutionDir)dependencies\asio\asio\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\dependencies\SFML\include;%(AdditionalIncludeDirectories);$(SolutionDir)dependencies\Json\single_include\;$(SolutionDir)dependencies\asio\asio\include;$(SolutionDir)GameSrc\src</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <OpenMPSupport>true</OpenMPSupport>
@@ -142,7 +142,7 @@
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\SFML\include;%(AdditionalIncludeDirectories);$(SolutionDir)dependencies\Json\single_include\;$(SolutionDir)dependencies\asio\asio\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\SFML\include;%(AdditionalIncludeDirectories);$(SolutionDir)dependencies\Json\single_include\;$(SolutionDir)dependencies\asio\asio\include;$(SolutionDir)GameSrc\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
@@ -159,11 +159,11 @@
     <ClCompile Include="src\game_constants.hpp" />
     <ClCompile Include="src\map.cpp" />
     <ClCompile Include="src\Networking\Client\Client.cpp" />
-    <ClCompile Include="src\Networking\MessageTypes.cpp" />
     <ClCompile Include="src\Networking\Server\Server.cpp" />
     <ClCompile Include="src\Player\player.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\task.cpp" />
+    <ClCompile Include="src\Utility\logging.cpp" />
     <ClCompile Include="src\WindowApp\Menu\Button.cpp" />
     <ClCompile Include="src\WindowApp\WindowApp.cpp" />
   </ItemGroup>

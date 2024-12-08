@@ -25,6 +25,11 @@ protected:
 
     std::vector<std::unique_ptr<uiElement>> uiElements;
 
+    std::vector<std::vector<int>> maze;
+    std::vector<Task> tasks;
+    std::vector<Survivor> survivors;
+    Killer killer;
+
 
 private:
 
@@ -41,11 +46,16 @@ private:
 
     void processInput();
     void renderElements();
+    void renderGameState();
     void playerReady();
+
+    std::vector<std::vector<int>> decompressMap(const std::vector<std::vector<std::pair<int, int>>>& compressedMap);
 
 public:
     WindowApp(asio::io_context& ioC, const unsigned width = 800, const unsigned height = 600);
     ~WindowApp();
+
+    void processGameState(const json& gameState);
 
     void startServer();
     bool startClient();
