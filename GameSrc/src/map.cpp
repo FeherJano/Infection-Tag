@@ -133,7 +133,7 @@ void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& ma
 
             if (showFullMap) {
                 // Ha a teljes térkép látszik, minden cella megjelenik
-                if (maze[i][j] == 1) {
+                if (maze[i][j] == 1) { // Itt a crash bazmeg
                     cell.setFillColor(sf::Color(128, 128, 128)); // Fal
                 }
                 else {
