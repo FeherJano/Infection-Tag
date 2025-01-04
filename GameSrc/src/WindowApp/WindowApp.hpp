@@ -39,12 +39,19 @@ private:
 
     void initializeMenu();
     void initializeLobby();
+    void initializeClientLobby();
     void initializeGame();
-
 
     void processInput();
     void renderElements();
-    void renderGame();
+    void renderGame(const json& gameData, bool showFullMap);
+    void processGameData(const json& gameData,
+        std::vector<std::vector<int>>& maze,
+        std::vector<Survivor>& survivors,
+        Killer& killer,
+        std::vector<Task>& tasks);
+
+
 
     void startServer();
     bool startClient();

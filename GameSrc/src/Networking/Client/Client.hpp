@@ -7,6 +7,7 @@
 #include "asio.hpp"
 #include "../../Player/player.hpp"
 #include "../MessageTypes.hpp"
+#include "../../task.hpp"
 #include <functional>
 
 
@@ -19,9 +20,17 @@ public:
     std::string connect();
     void waitForGameData();
 
+    json getGameData() const { return gameData; }
+    bool isGameDataReady() const { return gameDataReady; }
+    std::vector<std::vector<int>> decompressMap(const std::vector<std::vector<std::pair<int, int>>>& compressedMap);
+
+
 private:
+    json gameData;
+    bool gameDataReady = false;
     asio::ip::udp::socket socket;
     asio::ip::udp::endpoint serverEndpoint;
+    
 };
 
 #endif

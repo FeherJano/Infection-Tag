@@ -33,7 +33,8 @@ private:
     asio::ip::udp::socket socket;
     std::unordered_map<std::string, asio::ip::udp::endpoint> players;
     std::unordered_map<std::string, asio::ip::udp::endpoint> playersEndpoints;
-    
+
+    std::vector<std::vector<std::pair<int, int>>> compressMap(const std::vector<std::vector<int>>& map);
 
     void listen();
     void setupGameState();

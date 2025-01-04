@@ -76,35 +76,66 @@ void CatGameServer::setupGameState() {
     broadcastGameData();
 }
 
+std::vector<std::vector<std::pair<int, int>>> CatGameServer::compressMap(const std::vector<std::vector<int>>& map) {
+    std::vector<std::vector<std::pair<int, int>>> compressedMap;
+    for (const auto& row : map) {
+        std::vector<std::pair<int, int>> compressedRow;
+        int currentValue = row[0];
+        int count = 0;
+
+        for (const auto& cell : row) {
+            if (cell == currentValue) {
+                ++count;
+            }
+            else {
+                compressedRow.emplace_back(currentValue, count);
+                currentValue = cell;
+                count = 1;
+            }
+        }
+        compressedRow.emplace_back(currentValue, count); // Az utolsó szakasz hozzáadása
+        compressedMap.push_back(compressedRow);
+    }
+    return compressedMap;
+}
+
 
 
 void CatGameServer::generateGameData() {
-    // Generáljuk a térképet
-    std::vector<std::vector<int>> map(10, std::vector<int>(10, 0));
-    for (int i = 0; i < 10; ++i) {
-        map[i][i] = 1; // Átlós fal
+    // Pálya generálása
+    std::vector<std::vector<int>> maze(HEIGHT, std::vector<int>(WIDTH, 0));
+    placeObjects(maze);
+
+    // Pálya tömörítése
+    auto compressedMap = compressMap(maze);
+
+    // Tömörített map tárolása JSON-ben
+    gameData["map"] = compressedMap;
+
+    // Feladatok és játékosok hozzáadása
+    std::vector<Task> tasks;
+    placeTasks(tasks, maze, 2); // Példa túlélőszám
+    gameData["tasks"] = json::array();
+    for (const auto& task : tasks) {
+        gameData["tasks"].push_back(task.to_json());
     }
 
-    // Feladatok
-    std::vector<json> tasks;
-    tasks.push_back({ {"position", {2, 2}}, {"progress", 0} });
-    tasks.push_back({ {"position", {5, 5}}, {"progress", 0} });
-
-    // Játékosok
-    std::vector<json> players;
-    for (const auto& [playerId, endpoint] : playersEndpoints) {
-        players.push_back({ {"playerId", playerId}, {"position", {0, 0}} });
-    }
-
-    // JSON objektum készítése
-    gameData = {
-        {"map", map},
-        {"tasks", tasks},
-        {"players", players}
+    std::vector<Survivor> survivors = {
+        Survivor(10.0f, 10.0f, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }),
+        Survivor(20.0f, 20.0f, { sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Left, sf::Keyboard::Right })
     };
+    Killer killer(30.0f, 30.0f, { sf::Keyboard::I, sf::Keyboard::K, sf::Keyboard::J, sf::Keyboard::L });
 
-    std::cout << "Game data generated:\n" << gameData.dump(4) << std::endl;
+    gameData["players"] = json::array();
+    for (const auto& survivor : survivors) {
+        gameData["players"].push_back(survivor.to_json());
+    }
+    gameData["killer"] = killer.to_json();
+
+    //std::cout << "Game data generated and compressed:\n" << gameData.dump(4) << std::endl;
 }
+
+
 
 
 
@@ -112,18 +143,32 @@ void CatGameServer::broadcastGameData() {
     for (const auto& [playerId, endpoint] : playersEndpoints) {
         try {
             std::string dataToSend = gameData.dump();
-            auto buffer = asio::buffer(dataToSend);
+            const size_t chunkSize = 1024; // Max buffer size
+            size_t totalSize = dataToSend.size();
+            size_t numChunks = (totalSize + chunkSize - 1) / chunkSize;
 
-            // Adatok elküldése
-            socket.send_to(buffer, endpoint);
-            std::cout << "Game data sent to player " << playerId << " at "
-                << endpoint.address().to_string() << ":" << endpoint.port() << std::endl;
+            for (size_t i = 0; i < numChunks; ++i) {
+                size_t start = i * chunkSize;
+                size_t end = std::min(start + chunkSize, totalSize);
+                std::string chunk = dataToSend.substr(start, end - start);
+
+                socket.send_to(asio::buffer(chunk), endpoint);
+
+                // Log the sent chunk
+                std::cout << "Sent chunk " << (i + 1) << "/" << numChunks << " to " << playerId << std::endl;
+            }
+
+            // Send end of data signal
+            std::string endSignal = "END_OF_DATA";
+            socket.send_to(asio::buffer(endSignal), endpoint);
+
         }
         catch (const std::exception& e) {
             std::cerr << "Failed to send game data to player " << playerId << ": " << e.what() << std::endl;
         }
     }
 }
+
 
 
 
