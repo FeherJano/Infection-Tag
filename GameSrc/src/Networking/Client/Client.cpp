@@ -1,135 +1,82 @@
 #include "Client.hpp"
-#include "../../Utility/logging.hpp"
-#include <thread>
-#include "asio.hpp"
-#include "../../WindowApp/WindowApp.hpp"
+#include <iostream>
 
-uint8_t Client::maxRetries = 3;
+Client::Client(const std::string& serverAddress, uint16_t port, asio::io_context& ioContext)
+    : socket(ioContext) {
+    try {
+        // Resolver az IPv4 címekhez
+        asio::ip::udp::resolver resolver(ioContext);
+        serverEndpoint = *resolver.resolve(asio::ip::udp::v4(), serverAddress, std::to_string(port)).begin();
 
-Client::Client(const std::string& address, uint16_t port, asio::io_context& ioC): port(port), 
-    mainSocket(ioC), myKiller(nullptr), mySurvivor(nullptr),recvBuf(std::array<char,maxMessageLength>()),
-    sendBuf(std::array<char, maxMessageLength>()),currentState(cStateMenu){
-    recvBuf.fill(0);
-    sendBuf.fill(0);
-    udp::resolver resolver = udp::resolver(ioC);
-    remoteSendEndp = *resolver.resolve(udp::v4(), address,std::to_string(port)).begin();
-    mainSocket.open(udp::v4());
-    mainSocket.set_option(asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{1000});
-}
-clientState Client::getState()const{
-    return currentState;
+        // Socket inicializálása IPv4-re
+        socket.open(asio::ip::udp::v4());
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error initializing client socket: " << e.what() << std::endl;
+    }
 }
 
-void Client::setState(clientState newS) {
-    currentState = newS;
-}
 
 
 std::string Client::connect() {
     try {
         json connMsg;
-        connMsg[msgTypes::msgType] = messageSet::connReq;
-        int retries = 0;
-        while (!msgToServer(connMsg) && retries < maxRetries) {
-            retries++;
+        connMsg["type"] = "connect";
+
+        // Log: üzenet küldése
+        std::cout << "Sending connect request to server at "
+            << serverEndpoint.address().to_string() << ":"
+            << serverEndpoint.port() << std::endl;
+
+        // Üzenet küldése
+        socket.send_to(asio::buffer(connMsg.dump()), serverEndpoint);
+
+        // Válasz fogadása
+        char buffer[1024];
+        asio::ip::udp::endpoint senderEndpoint;
+        size_t len = socket.receive_from(asio::buffer(buffer), senderEndpoint);
+
+        // Válasz feldolgozása
+        json response = json::parse(std::string(buffer, len));
+        std::cout << "Received response: " << response.dump() << std::endl;
+
+        if (response["type"] == "connected") {
+            std::cout << "Connected to server, received playerId: " << response["playerId"] << std::endl;
+            return response["playerId"];
         }
-        json response = msgFromServer();
-        if (response.at(msgTypes::msgType) != messageSet::OK) {
-            return "";
+        else {
+            std::cerr << "Unexpected response from server: " << response.dump() << std::endl;
         }
-        playerId = response.at("playerId").template get<std::string>();
-        std::cout << playerId<<'\n';
-        return playerId;
     }
-    catch (json::exception e) {
-        logErr(e.what());
+    catch (const std::exception& e) {
+        std::cerr << "Error connecting to server: " << e.what() << std::endl;
     }
-    catch (std::exception e) {
-        logErr(e.what());
-    }
-    return "";
+
+    std::cerr << "Connect failed." << std::endl;
+    return ""; // Üres string visszaadása, ha a kapcsolat nem sikerült
 }
 
 
-bool Client::msgToServer(json &message) {
 
+void Client::waitForGameData() {
     try {
-        mainSocket.send_to(asio::buffer(message.dump()), remoteSendEndp);
+        char buffer[1024];
+        asio::ip::udp::endpoint senderEndpoint;
+
+        // Adatok fogadása
+        size_t len = socket.receive_from(asio::buffer(buffer), senderEndpoint);
+        json gameData = json::parse(std::string(buffer, len));
+
+        std::cout << "Game data received:\n" << gameData.dump(4) << std::endl;
+
+        // Nyugtázó üzenet küldése a szervernek
+        json ackMsg;
+        ackMsg["type"] = "ack";
+        socket.send_to(asio::buffer(ackMsg.dump()), senderEndpoint);
+
+        std::cout << "Acknowledgment sent to server." << std::endl;
     }
-    catch (std::exception e) {
-        logErr("An exception occured during messaging server!"<<e.what());
-        return false;
+    catch (const std::exception& e) {
+        std::cerr << "Error receiving game data: " << e.what() << std::endl;
     }
-    return true;
-
-}
-
-json Client::msgFromServer() {
-    recvBuf.fill(0);
-    json response;
-    try {
-        size_t len = mainSocket.receive_from(asio::buffer(recvBuf), remoteRecieveEndp);
-        logInfo("Msg from server: " << recvBuf.data());
-        response = json::parse(recvBuf.data());
-    }
-    catch (json::exception e) {
-        logErr("Got an invalid json from server: " << e.what());
-    }
-    catch (std::exception e){
-        logErr("Error during recieving from server!"<<e.what());
-    }
-    return response;
-
-}
-
-
-void Client::setGameStateCallback(GameStateCallback callback) {
-    gameStateCallback = std::move(callback);
-}
-
-void Client::waitForGame() {
-    while (currentState == cStateWaitGame) {
-        try {
-            json msg = msgFromServer();
-            if (msg.empty()) {
-                std::this_thread::sleep_for(100ms);
-                continue;
-            }
-            if (msg.at(msgTypes::msgType) == messageSet::gameStart) {
-                currentState = cStateStartGame;
-            }
-            else if (msg.at(msgTypes::msgType) == messageSet::gameState) {
-                if (gameStateCallback) {
-                    gameStateCallback(msg); // Callback meghívása
-                }
-            }
-        }
-        catch (json::exception& e) {
-            logErr(e.what());
-        }
-        catch (std::exception& e) {
-            logErr("Fatal during waiting to start, " << e.what());
-        }
-    }
-    logInfo("Client exited waiting phase");
-}
-
-
-
-void Client::sendReady(bool ready) {
-    json readyMsg;
-    readyMsg[msgTypes::msgType] = messageSet::clientReady;
-    readyMsg[msgTypes::playerData] = ready;
-    readyMsg[msgTypes::playerId] = playerId;
-    msgToServer(readyMsg);
-    currentState = cStateWaitGame;
-
-}
-
-void Client::sendDisconnect() {
-    setState(cStateExit);
-    json dcMsg;
-    dcMsg[msgTypes::msgType] = messageSet::connAbort;
-    dcMsg[msgTypes::playerId] = playerId;
-    msgToServer(dcMsg);
 }

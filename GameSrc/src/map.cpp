@@ -125,6 +125,18 @@ void placeObjects(std::vector<std::vector<int>>& maze) {
 }
 
 void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& maze, const Killer& killer, const std::vector<Survivor>& survivors, bool showFullMap) {
+
+    if (maze.size() < HEIGHT) {
+        std::cerr << "Error: Maze has fewer rows than expected. Expected: " << HEIGHT << ", Actual: " << maze.size() << std::endl;
+        return;
+    }
+    for (size_t i = 0; i < maze.size(); ++i) {
+        if (maze[i].size() < WIDTH) {
+            std::cerr << "Error: Maze row " << i << " has fewer columns than expected. Expected: " << WIDTH << ", Actual: " << maze[i].size() << std::endl;
+            return;
+        }
+    }
+
     // A térkép celláinak megjelenítése
     for (int i = 0; i < HEIGHT; i++) {
         for (int j = 0; j < WIDTH; j++) {
