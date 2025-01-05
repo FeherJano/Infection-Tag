@@ -18,6 +18,11 @@ using json = nlohmann::json;
 
 enum serverState { serverStateIdle, serverStateLobby, serverStateGameStart, serverStateGame };
 
+struct PlayerInfo {
+    std::string role; // "Survivor" vagy "Killer"
+    sf::Vector2f position;
+};
+
 class CatGameServer {
 public:
     CatGameServer(asio::io_context& ioContext, uint16_t port);
@@ -29,6 +34,8 @@ public:
     json gameData;
     serverState currentState;
 
+    std::unordered_map<std::string, std::string> playerRoles; // "Killer" vagy "Survivor"
+
 private:
     asio::ip::udp::socket socket;
     std::unordered_map<std::string, asio::ip::udp::endpoint> players;
@@ -38,7 +45,6 @@ private:
 
     void listen();
     void setupGameState();
-
     
 };
 

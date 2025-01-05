@@ -42,6 +42,7 @@ void WindowApp::initializeGame() {
 }
 
 void WindowApp::startServer() {
+    // Szerver indítása
     server = std::make_unique<CatGameServer>(ioContext, 8085);
     server->setState(serverStateLobby);
 
@@ -50,7 +51,24 @@ void WindowApp::startServer() {
         std::cout << "Server started. Waiting for messages on port 8085..." << std::endl;
         server->ServerFunction();
         }).detach();
+
+    // Host kliens csatlakoztatása
+    client = std::make_unique<Client>("localhost", 8085, ioContext);
+    std::cout << "Starting local Client for Host..." << std::endl;
+
+    if (client->connect() != "") {
+        //std::cout << "Local Client Connected as Host." << std::endl;
+        std::thread([this]() {
+            client->waitForGameData();
+            }).detach();
+    }
+    else {
+        std::cerr << "Failed to connect local Client for Host." << std::endl;
+    }
 }
+
+
+
 
 
 bool WindowApp::startClient() {
@@ -102,75 +120,42 @@ void WindowApp::processInput() {
 
 
 
-void WindowApp::processGameData(const json& gameData,
-    std::vector<std::vector<int>>& maze,
-    std::vector<Survivor>& survivors,
-    Killer& killer,
-    std::vector<Task>& tasks) {
-
+void WindowApp::processGameData(const json& gameData, std::vector<std::vector<int>>& maze, std::vector<Survivor>& survivors, Killer& killer, std::vector<Task>& tasks) {
     // Térkép feldolgozása
     if (gameData.contains("map") && gameData["map"].is_array()) {
-        try {
-            auto compressedMap = gameData["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
-            if (client) {
-                maze = client->decompressMap(compressedMap);
-            }
-            else {
-                std::cerr << "Client instance is null. Cannot decompress map." << std::endl;
-            }
-
-        } catch (const std::exception& e) {
-            std::cerr << "Error processing 'map': " << e.what() << std::endl;
+        auto compressedMap = gameData["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
+        if (client) {
+            maze = client->decompressMap(compressedMap);
         }
-    } else {
-        std::cerr << "'map' key is missing or not an array." << std::endl;
+    }
+
+    // Gyilkos pozíciójának feldolgozása
+    if (gameData.contains("killer")) {
+        killer.from_json(gameData["killer"]);
+    }
+
+    // Túlélők pozíciójának feldolgozása
+    if (gameData.contains("players") && gameData["players"].is_array()) {
+        survivors.clear();
+        for (const auto& playerData : gameData["players"]) {
+            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+            survivor.from_json(playerData);
+            survivors.push_back(survivor);
+        }
     }
 
     // Feladatok feldolgozása
     tasks.clear();
-    if (gameData.contains("tasks") && gameData["tasks"].is_array()) {
-        for (const auto& taskJson : gameData["tasks"]) {
-            try {
-                Task task(0, 0);
-                task.from_json(taskJson);
-                tasks.push_back(task);
-            } catch (const std::exception& e) {
-                std::cerr << "Error processing task: " << e.what() << " Data: " << taskJson.dump() << std::endl;
-            }
+    if (gameData.contains("tasks")) {
+        for (const auto& taskData : gameData["tasks"]) {
+            Task task(0, 0);
+            task.from_json(taskData);
+            tasks.push_back(task);
         }
-    } else {
-        std::cerr << "'tasks' key is missing or not an array." << std::endl;
-    }
-
-    // Játékosok feldolgozása
-    survivors.clear();
-    if (gameData.contains("players") && gameData["players"].is_array()) {
-        for (const auto& playerJson : gameData["players"]) {
-            try {
-                Survivor survivor(0, 0, { sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown });
-                survivor.from_json(playerJson);
-                survivors.push_back(survivor);
-            } catch (const std::exception& e) {
-                std::cerr << "Error processing player: " << e.what() << " Data: " << playerJson.dump() << std::endl;
-            }
-        }
-    } else {
-        std::cerr << "'players' key is missing or not an array." << std::endl;
-    }
-
-    // Gyilkos feldolgozása
-    if (gameData.contains("killer") && gameData["killer"].is_object()) {
-        try {
-            killer.from_json(gameData["killer"]);
-        } catch (const std::exception& e) {
-            std::cerr << "Error processing killer: " << e.what() << " Data: " << gameData["killer"].dump() << std::endl;
-        }
-    } else {
-        std::cerr << "'killer' key is missing or not an object." << std::endl;
     }
 }
 
-void WindowApp::renderGame(const json& gameData, bool showFullMap) {
+void WindowApp::renderGame(const json& gameData, const Player& clientPlayer, bool showFullMap) {
     std::vector<std::vector<int>> maze;
     std::vector<Survivor> survivors;
     Killer killer(0, 0, { sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown });
@@ -181,15 +166,22 @@ void WindowApp::renderGame(const json& gameData, bool showFullMap) {
 
     // Renderelés
     mainWindow->clear();
-    renderMap(*mainWindow, maze, killer, survivors, showFullMap);
+
+    // Térkép kirajzolása
+    renderMap(*mainWindow, maze, clientPlayer, survivors, killer, showFullMap);
+
+    // Karakterek kirajzolása
     for (const auto& survivor : survivors) {
         survivor.render(*mainWindow);
     }
     killer.render(*mainWindow);
+
+    // Feladatok kirajzolása
     for (const auto& task : tasks) {
-        bool isVisible = isTaskVisibleToAnySurvivor(task, survivors, maze);
+        bool isVisible = isCellVisible(clientPlayer.position, task.position.x / CELL_SIZE, task.position.y / CELL_SIZE, SURVIVOR_VIEW_RADIUS, maze);
         task.render(*mainWindow, isVisible, showFullMap);
     }
+
     mainWindow->display();
 }
 
@@ -213,10 +205,10 @@ int WindowApp::main() {
 
         if (currentState == AppState::GAME) {
             if (client) {
-                renderGame(client->getGameData(), false);
+                renderGame(client->getGameData(), *client->getPlayer(), false);
             }
             else if (server) {
-                renderGame(server->gameData, true);
+                //renderGame(server->gameData, false);
             }
         }
         else {

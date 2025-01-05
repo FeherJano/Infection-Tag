@@ -1,4 +1,4 @@
-#ifndef GAME_CONSTANTS_HPP
+﻿#ifndef GAME_CONSTANTS_HPP
 #define GAME_CONSTANTS_HPP
 
 // Map dimensions
@@ -19,5 +19,6 @@ const int HEALTH_STATE_COUNT = 3; // Number of health states
 
 // Health states for survivors
 enum HealthState { HEALTHY, INJURED, DYING, DEAD };
+
 
 #endif

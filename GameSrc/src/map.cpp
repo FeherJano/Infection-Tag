@@ -124,7 +124,7 @@ void placeObjects(std::vector<std::vector<int>>& maze) {
     }
 }
 
-void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& maze, const Killer& killer, const std::vector<Survivor>& survivors, bool showFullMap) {
+void renderMap_og(sf::RenderWindow& window, const std::vector<std::vector<int>>& maze, const Killer& killer, const std::vector<Survivor>& survivors, bool showFullMap) {
 
     if (maze.size() < HEIGHT) {
         std::cerr << "Error: Maze has fewer rows than expected. Expected: " << HEIGHT << ", Actual: " << maze.size() << std::endl;
@@ -182,6 +182,49 @@ void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& ma
     }
 }
 
+void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& maze, const Player& player, const std::vector<Survivor>& survivors, const Killer& killer, bool showFullMap) {
+    if (maze.size() < HEIGHT || maze[0].size() < WIDTH) {
+        std::cerr << "Error: Maze dimensions are incorrect." << std::endl;
+        return;
+    }
+
+    sf::Vector2f playerPos = player.position;
+
+    for (int i = 0; i < HEIGHT; ++i) {
+        for (int j = 0; j < WIDTH; ++j) {
+            sf::RectangleShape cell(sf::Vector2f(CELL_SIZE, CELL_SIZE));
+            cell.setPosition(j * CELL_SIZE, i * CELL_SIZE);
+
+            if (showFullMap) {
+                cell.setFillColor(maze[i][j] == 1 ? sf::Color(128, 128, 128) : sf::Color::Black);
+            }
+            else {
+                if (isCellVisibleWithObstacles(playerPos, j, i, SURVIVOR_VIEW_RADIUS, maze)) {
+                    cell.setFillColor(maze[i][j] == 1 ? sf::Color(128, 128, 128) : sf::Color::Black);
+                }
+                else {
+                    cell.setFillColor(sf::Color(20, 20, 20)); // Fog of war
+                }
+            }
+
+            window.draw(cell);
+        }
+    }
+
+    // Karakterek renderelése a látómező alapján
+    for (const auto& survivor : survivors) {
+        if (isCellVisibleWithObstacles(playerPos, survivor.position.x / CELL_SIZE, survivor.position.y / CELL_SIZE, SURVIVOR_VIEW_RADIUS, maze)) {
+            survivor.render(window);
+        }
+    }
+
+    if (isCellVisibleWithObstacles(playerPos, killer.position.x / CELL_SIZE, killer.position.y / CELL_SIZE, SURVIVOR_VIEW_RADIUS, maze)) {
+        killer.render(window);
+    }
+}
+
+
+
 
 bool checkCollision(sf::Vector2f position, float playerSize, const std::vector<std::vector<int>>& maze) {
     // Take player's size into account (pSize = half of the character's width/height)
@@ -234,6 +277,40 @@ bool isCellVisible(sf::Vector2f playerPos, int gridX, int gridY, float viewRadiu
     }
 }
 
+bool isCellVisibleWithObstacles(const sf::Vector2f& playerPos, int cellX, int cellY, int viewRadius, const std::vector<std::vector<int>>& maze) {
+    float dx = cellX - playerPos.x / CELL_SIZE;
+    float dy = cellY - playerPos.y / CELL_SIZE;
+    float distance = sqrt(dx * dx + dy * dy);
+
+    // Ha a cella túl messze van, nem látható
+    if (distance > viewRadius) {
+        return false;
+    }
+
+    // Raycasting a látóvonal ellenőrzéséhez
+    int steps = std::max(abs(static_cast<int>(dx)), abs(static_cast<int>(dy)));
+    float stepX = dx / steps;
+    float stepY = dy / steps;
+
+    float x = playerPos.x / CELL_SIZE;
+    float y = playerPos.y / CELL_SIZE;
+
+    for (int i = 0; i < steps; ++i) {
+        x += stepX;
+        y += stepY;
+        int gridX = static_cast<int>(x);
+        int gridY = static_cast<int>(y);
+
+        // Ha fal van az útban, a falat láthatóvá tesszük, de mögötte lévő cellákat nem
+        if (maze[gridY][gridX] == 1) {
+            return gridX == cellX && gridY == cellY;
+        }
+    }
+
+    // Ha nincs fal az útban, a cella látható
+    return true;
+}
+
 bool isCellInKillerSight(const Player& killer, int gridX, int gridY, const std::vector<std::vector<int>>& maze) {
     float dx = gridX - (killer.position.x / CELL_SIZE);
     float dy = gridY - (killer.position.y / CELL_SIZE);
@@ -244,4 +321,22 @@ bool isCellInKillerSight(const Player& killer, int gridX, int gridY, const std::
 
     // Ha a cella látható a killer számára
     return isCellVisible(killer.position, gridX, gridY, KILLER_VIEW_DISTANCE, maze);
+}
+
+#include <random>
+
+// Random pozíció generálása
+sf::Vector2f generateRandomPosition(const std::vector<std::vector<int>>& maze, int cellWidth, int cellHeight) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distX(0, WIDTH - cellWidth);
+    std::uniform_int_distribution<> distY(0, HEIGHT - cellHeight);
+
+    int x, y;
+    do {
+        x = distX(gen);
+        y = distY(gen);
+    } while (!canPlaceObject(maze, x, y, cellWidth, cellHeight));
+
+    return sf::Vector2f(x * CELL_SIZE, y * CELL_SIZE);
 }

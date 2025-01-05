@@ -17,18 +17,12 @@ Client::Client(const std::string& serverAddress, uint16_t port, asio::io_context
 }
 
 
-
 std::string Client::connect() {
     try {
         json connMsg;
         connMsg["type"] = "connect";
 
-        // Log: üzenet küldése
-        std::cout << "Sending connect request to server at "
-            << serverEndpoint.address().to_string() << ":"
-            << serverEndpoint.port() << std::endl;
-
-        // Üzenet küldése
+        // Üzenet küldése a szervernek
         socket.send_to(asio::buffer(connMsg.dump()), serverEndpoint);
 
         // Válasz fogadása
@@ -38,11 +32,36 @@ std::string Client::connect() {
 
         // Válasz feldolgozása
         json response = json::parse(std::string(buffer, len));
-        std::cout << "Received response: " << response.dump() << std::endl;
 
         if (response["type"] == "connected") {
-            std::cout << "Connected to server, received playerId: " << response["playerId"] << std::endl;
-            return response["playerId"];
+            std::string playerId = response["playerId"];
+            if (response.contains("role") && !response["role"].is_null()) {
+                std::string role = response["role"];
+
+                if (role == "Killer") {
+                    // Killer objektum létrehozása
+                    player = std::make_unique<Killer>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D});
+                }
+                else if (role == "Survivor") {
+                    // Survivor objektum létrehozása
+                    player = std::make_unique<Survivor>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D});
+                }
+                else {
+                    std::cerr << "Unknown role received: " << role << std::endl;
+                    return "";
+                }
+
+                // A szerver által küldött karakteradatok beállítása
+                if (response.contains("playerData")) {
+                    player->from_json(response["playerData"]);
+                }
+
+                return playerId;
+            }
+            else {
+                std::cerr << "Error: 'role' is missing or null in server response." << std::endl;
+                return "";
+            }
         }
         else {
             std::cerr << "Unexpected response from server: " << response.dump() << std::endl;
@@ -53,8 +72,9 @@ std::string Client::connect() {
     }
 
     std::cerr << "Connect failed." << std::endl;
-    return ""; // Üres string visszaadása, ha a kapcsolat nem sikerült
+    return "";
 }
+
 
 std::vector<std::vector<int>> Client::decompressMap(const std::vector<std::vector<std::pair<int, int>>>& compressedMap) {
     std::vector<std::vector<int>> decompressedMap;

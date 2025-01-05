@@ -44,7 +44,7 @@ private:
 
     void processInput();
     void renderElements();
-    void renderGame(const json& gameData, bool showFullMap);
+    void renderGame(const json& gameData, const Player& clientPlayer, bool showFullMap);
     void processGameData(const json& gameData,
         std::vector<std::vector<int>>& maze,
         std::vector<Survivor>& survivors,

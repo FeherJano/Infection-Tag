@@ -37,17 +37,31 @@ void CatGameServer::listen() {
             json request = json::parse(std::string(buffer, len));
             if (request["type"] == "connect") {
                 static int playerCounter = 1;
-                std::string playerId = "Player" + std::to_string(playerCounter++);
+                std::string playerId = "Player" + std::to_string(playerCounter);
+
+                // Csak az első játékos (Player1) lehet Killer
+                if (playerCounter == 1 && playerRoles.find(playerId) == playerRoles.end()) {
+                    playerRoles[playerId] = "Killer";
+                }
+                else {
+                    playerRoles[playerId] = "Survivor";
+                }
+
+                // Következő játékos előkészítése
+                playerCounter++;
 
                 json response;
                 response["type"] = "connected";
                 response["playerId"] = playerId;
+                response["role"] = playerRoles[playerId];
 
                 socket.send_to(asio::buffer(response.dump()), senderEndpoint);
 
                 playersEndpoints[playerId] = senderEndpoint;
+
                 std::cout << "Player connected: " << playerId << " at "
-                    << senderEndpoint.address().to_string() << ":" << senderEndpoint.port() << std::endl;
+                    << senderEndpoint.address().to_string() << ":" << senderEndpoint.port()
+                    << " as " << playerRoles[playerId] << std::endl;
             }
             else if (request["type"] == "ack") {
                 std::cout << "Acknowledgment received from "
@@ -100,43 +114,42 @@ std::vector<std::vector<std::pair<int, int>>> CatGameServer::compressMap(const s
 }
 
 
-
 void CatGameServer::generateGameData() {
-    // Pálya generálása
+    // Térkép generálása
     std::vector<std::vector<int>> maze(HEIGHT, std::vector<int>(WIDTH, 0));
     placeObjects(maze);
-
-    // Pálya tömörítése
     auto compressedMap = compressMap(maze);
-
-    // Tömörített map tárolása JSON-ben
     gameData["map"] = compressedMap;
 
-    // Feladatok és játékosok hozzáadása
+    // Feladatok létrehozása
     std::vector<Task> tasks;
-    placeTasks(tasks, maze, 2); // Példa túlélőszám
+    placeTasks(tasks, maze, playersEndpoints.size());
     gameData["tasks"] = json::array();
     for (const auto& task : tasks) {
         gameData["tasks"].push_back(task.to_json());
     }
 
-    std::vector<Survivor> survivors = {
-        Survivor(10.0f, 10.0f, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }),
-        Survivor(20.0f, 20.0f, { sf::Keyboard::Up, sf::Keyboard::Down, sf::Keyboard::Left, sf::Keyboard::Right })
-    };
-    Killer killer(30.0f, 30.0f, { sf::Keyboard::I, sf::Keyboard::K, sf::Keyboard::J, sf::Keyboard::L });
+    // Játékosok létrehozása
+    std::vector<Survivor> survivors;
+    Killer killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
 
-    gameData["players"] = json::array();
-    for (const auto& survivor : survivors) {
-        gameData["players"].push_back(survivor.to_json());
-    }
+    // Gyilkos pozíciójának randomizálása
+    sf::Vector2f killerPos = generateRandomPosition(maze, 1, 1);
+    killer.position = killerPos;
     gameData["killer"] = killer.to_json();
 
-    //std::cout << "Game data generated and compressed:\n" << gameData.dump(4) << std::endl;
+    // Túlélők pozíciójának randomizálása
+    for (const auto& [playerId, role] : playerRoles) {
+        if (role == "Survivor") {
+            sf::Vector2f survivorPos = generateRandomPosition(maze, 1, 1);
+            Survivor survivor(survivorPos.x, survivorPos.y, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+            survivors.push_back(survivor);
+            gameData["players"].push_back(survivor.to_json());
+        }
+    }
+
+    std::cout << "Game data generated:\n" << std::endl;
 }
-
-
-
 
 
 void CatGameServer::broadcastGameData() {
@@ -168,9 +181,3 @@ void CatGameServer::broadcastGameData() {
         }
     }
 }
-
-
-
-
-
-

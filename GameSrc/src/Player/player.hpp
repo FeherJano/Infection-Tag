@@ -26,6 +26,8 @@ public:
     void move(float deltaTime, const std::vector<std::vector<int>>& maze);
     virtual void update(float deltaTime);
     virtual void render(sf::RenderWindow& window) const = 0;
+
+    void from_json(const json& j);
 };
 
 class Survivor : public Player {

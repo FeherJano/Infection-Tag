@@ -66,6 +66,22 @@ void Player::update(float deltaTime) {
     }
 }
 
+void Player::from_json(const json& j) {
+    position.x = j.at("position").at(0);
+    position.y = j.at("position").at(1);
+    moveSpeed = j.at("moveSpeed");
+
+    // Irány beállítása (ha létezik)
+    if (j.contains("lastDirection")) {
+        lastDirection.x = j.at("lastDirection").at(0);
+        lastDirection.y = j.at("lastDirection").at(1);
+    }
+    else {
+        lastDirection = sf::Vector2f(0.0f, 0.0f); // Alapértelmezett irány
+    }
+}
+
+
 
 Survivor::Survivor(float startX,
                    float startY,
