@@ -22,11 +22,36 @@ void WindowApp::startServer() {
     server->setState(serverStateLobby);
 }
 
+/** Creates and starts a local instance of a client for the hosting player.
+* It is intended to call this only once!
+* 
+*/
+bool WindowApp::startLocalClient() {
+    if (player !=nullptr) {
+        return false;
+    }
+    player = std::unique_ptr<Client>(new Client("localhost", myPort, ioContext));
+    if (this->player->connect() == "") {
+        return false;
+    }
+    this->player->setGameStateCallback([this](const json& gameState) {
+        this->processGameState(gameState); // A játékállapot feldolgozása
+        });
+    player->sendReady(true);
+    player->setState(cStateWaitGame);
+    
+    std::thread t(&Client::waitForGame, player.get());
+    t.detach();
+
+}
+
 
 bool WindowApp::startClient() {
+
     if (this->player != nullptr)return false;
     currentState = AppState::GAME;
-    this->player = std::unique_ptr<Client>(new Client("localhost", 8085, ioContext));
+    //TODO make hardcoded remote address in client constr. dynamic
+    this->player = std::unique_ptr<Client>(new Client("localhost", myPort, ioContext));
     if (this->player->connect() == "") {
         return false;
     }
@@ -109,11 +134,13 @@ void WindowApp::initializeLobbyStateClient() {
 
 void WindowApp::startGame() {
     if (server) {
+        startLocalClient();
         server->setState(serverStateGameStart);
         server->setupGameState();
     }
     if (player) {
         player->setState(cStateRunGame);
+        clearUIElements();
     }
     currentState = AppState::GAME;
 }
@@ -159,7 +186,7 @@ void WindowApp::processInput() {
                         break; 
                     }
                     case 11: initializePlayState(); break;
-                    case 12: currentState = AppState::GAME; startGame();  break; // Start the game
+                    case 12: startGame(); std::this_thread::sleep_for(200ms); break; // Start the game
                     case 13: initializeMenu(); server->shutDown(); break; // Quit lobby - host
                     case 14: playerReady(); break; //Client ready in lobby
                     case 15: initializeMenu(); break; // Quit lobby - client
@@ -178,7 +205,7 @@ void WindowApp::processInput() {
 std::vector<std::vector<int>> WindowApp::decompressMap(const std::vector<std::vector<std::pair<int, int>>>& compressedMap) {
     std::vector<std::vector<int>> decompressedMap;
     for (const auto& compressedRow : compressedMap) {
-        std::vector<int> row;
+        auto row = std::vector<int>();
         for (const auto& [value, count] : compressedRow) {
             row.insert(row.end(), count, value); // Az értékek kibontása
         }
@@ -190,7 +217,7 @@ std::vector<std::vector<int>> WindowApp::decompressMap(const std::vector<std::ve
 void WindowApp::processGameState(const json& gameState) {
     // Térkép betöltése
     auto compressedMap = gameState["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
-    maze = decompressMap(compressedMap); // Map visszaállítása
+    this->maze = decompressMap(compressedMap); // Map visszaállítása
 
     // Feladatok betöltése
     tasks.clear();
@@ -248,6 +275,7 @@ void WindowApp::renderElements() {
     mainWindow->display();
 }
 
+
 int WindowApp::main() {
     while (mainWindow->isOpen()) {
         processInput();
@@ -264,4 +292,6 @@ int WindowApp::main() {
     }
     return 0;
 }
+
+
 

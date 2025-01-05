@@ -49,6 +49,8 @@ private:
     void renderGameState();
     void playerReady();
 
+    bool startLocalClient();
+
     std::vector<std::vector<int>> decompressMap(const std::vector<std::vector<std::pair<int, int>>>& compressedMap);
 
 public:

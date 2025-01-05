@@ -88,7 +88,7 @@ void Client::setGameStateCallback(GameStateCallback callback) {
 }
 
 void Client::waitForGame() {
-    while (currentState == cStateWaitGame) {
+    while (currentState != cStateStartGame) {
         try {
             json msg = msgFromServer();
             if (msg.empty()) {
@@ -96,12 +96,13 @@ void Client::waitForGame() {
                 continue;
             }
             if (msg.at(msgTypes::msgType) == messageSet::gameStart) {
-                currentState = cStateStartGame;
+                currentState = cStateWaitGame;
             }
-            else if (msg.at(msgTypes::msgType) == messageSet::gameState) {
+            if (msg.at(msgTypes::msgType) == messageSet::gameState) {
                 if (gameStateCallback) {
                     gameStateCallback(msg); // Callback meghívása
                 }
+                currentState = cStateStartGame;
             }
         }
         catch (json::exception& e) {
