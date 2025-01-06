@@ -131,7 +131,17 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
 
     // Gyilkos pozíciójának feldolgozása
     if (gameData.contains("killer")) {
-        killer.from_json(gameData["killer"]);
+        auto killerData = gameData["killer"];
+        killer.from_json(killerData);
+
+        // Ha a gyilkos a kliens játékosa, állítsuk be a pozíciót
+        if (killerData.contains("playerId")) {
+            std::cout << "Killer playerData: " << killerData["playerId"] << std::endl;
+            std::cout << "Client Id: " << client->getId() << std::endl;
+            if (client->getId() == killerData["playerId"]) {
+                clientPlayer.setPosition(killerData["position"][0], killerData["position"][1]);
+            }
+        }
     }
 
     // Túlélők pozíciójának feldolgozása
@@ -145,8 +155,6 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
             // Ha ez a túlélő a kliens játékosa, állítsuk be a clientPlayer-t
             if (playerData.contains("playerId"))
             {
-                std::cout << "playerData: " << playerData["playerId"] << std::endl;
-                std::cout << "Client Id: " << client->getId() << std::endl;
                 if (client->getId() == playerData["playerId"]) {
                     clientPlayer.setPosition(playerData["position"][0], playerData["position"][1]);
 
