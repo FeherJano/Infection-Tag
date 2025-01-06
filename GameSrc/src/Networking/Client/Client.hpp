@@ -30,7 +30,7 @@ public:
     std::vector<std::vector<int>> decompressMap(const std::vector<std::vector<std::pair<int, int>>>& compressedMap);
 
     void sendPlayerInput(const sf::Vector2f& direction);
-
+    void listen();
 
 private:
     json gameData;

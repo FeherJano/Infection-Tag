@@ -136,6 +136,41 @@ void Client::waitForGameData() {
     }
 }
 
+void Client::listen() {
+    try {
+        while (true) {
+            char buffer[1024];
+            asio::ip::udp::endpoint senderEndpoint;
+            size_t len = socket.receive_from(asio::buffer(buffer), senderEndpoint);
+
+            // Adat feldolgozása
+            std::string data(buffer, len);
+            gameData = json::parse(data);
+
+            // Gyilkos pozíciójának frissítése
+            if (gameData.contains("killer")) {
+                player->from_json(gameData["killer"]);
+                std::cout << "Killer updated: " << player->getPosition().x << ", " << player->getPosition().y << std::endl;
+            }
+
+            // Túlélők pozíciójának frissítése
+            if (gameData.contains("players")) {
+                for (const auto& playerData : gameData["players"]) {
+                    if (playerData["playerId"] == playerId) {
+                        player->from_json(playerData);
+                        std::cout << "Player updated: " << player->getPosition().x << ", " << player->getPosition().y << std::endl;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error in listen: " << e.what() << std::endl;
+    }
+}
+
+
 void Client::sendPlayerInput(const sf::Vector2f& direction) {
     try {
         json inputMsg;

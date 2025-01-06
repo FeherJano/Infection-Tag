@@ -251,12 +251,6 @@ bool checkCollision(sf::Vector2f position, float playerSize, const std::vector<s
     int topCell = static_cast<int>(top / CELL_SIZE);
     int bottomCell = static_cast<int>(bottom / CELL_SIZE);
 
-    // Debug log az indexekhez
-    std::cout << "Checking collision at: leftCell=" << leftCell
-        << ", rightCell=" << rightCell
-        << ", topCell=" << topCell
-        << ", bottomCell=" << bottomCell << std::endl;
-
     // Határértékek ellenőrzése
     if (leftCell < 0 || rightCell >= static_cast<int>(maze[0].size()) ||
         topCell < 0 || bottomCell >= static_cast<int>(maze.size())) {

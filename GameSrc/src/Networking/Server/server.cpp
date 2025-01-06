@@ -67,6 +67,13 @@ void CatGameServer::listen() {
                 std::string playerId = getPlayerIdByEndpoint(senderEndpoint);
                 sf::Vector2f direction(request["direction"][0], request["direction"][1]);
                 processPlayerInput(playerId, direction);
+                
+                std::cout << "pROCESSED pOSITION: "
+                    << killer.getPosition().x << "," << killer.getPosition().y << std::endl;
+                gameData.clear();
+
+                gameData["killer"] = killer.to_json();;
+
                 broadcastGameData();
             }
             else if (request["type"] == "ack") {
