@@ -190,6 +190,9 @@ void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& ma
 
     sf::Vector2f playerPos = player.position;
 
+    std::cout << "Rendering map for player at: (" << playerPos.x << ", " << playerPos.y << ")" << std::endl;
+
+
     for (int i = 0; i < HEIGHT; ++i) {
         for (int j = 0; j < WIDTH; ++j) {
             sf::RectangleShape cell(sf::Vector2f(CELL_SIZE, CELL_SIZE));

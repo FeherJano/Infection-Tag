@@ -24,6 +24,9 @@ public:
     bool isGameDataReady() const { return gameDataReady; }
     Player* getPlayer() { return player.get(); }
 
+    std::string getId() const { return playerId; }
+    void setId(const std::string& id) { playerId = id; }
+
     std::vector<std::vector<int>> decompressMap(const std::vector<std::vector<std::pair<int, int>>>& compressedMap);
 
 private:
@@ -32,6 +35,7 @@ private:
     asio::ip::udp::socket socket;
     asio::ip::udp::endpoint serverEndpoint;
     std::unique_ptr<Player> player;
+    std::string playerId;
     
 };
 

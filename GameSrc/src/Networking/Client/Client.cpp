@@ -34,7 +34,8 @@ std::string Client::connect() {
         json response = json::parse(std::string(buffer, len));
 
         if (response["type"] == "connected") {
-            std::string playerId = response["playerId"];
+            //std::string playerId = response["playerId"];
+            setId(response["playerId"]);
             if (response.contains("role") && !response["role"].is_null()) {
                 std::string role = response["role"];
 

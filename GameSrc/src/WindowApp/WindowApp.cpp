@@ -120,7 +120,7 @@ void WindowApp::processInput() {
 
 
 
-void WindowApp::processGameData(const json& gameData, std::vector<std::vector<int>>& maze, std::vector<Survivor>& survivors, Killer& killer, std::vector<Task>& tasks) {
+void WindowApp::processGameData(const json& gameData, std::vector<std::vector<int>>& maze, std::vector<Survivor>& survivors, Killer& killer, std::vector<Task>& tasks, Player& clientPlayer) {
     // Térkép feldolgozása
     if (gameData.contains("map") && gameData["map"].is_array()) {
         auto compressedMap = gameData["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
@@ -141,6 +141,17 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
             Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
             survivor.from_json(playerData);
             survivors.push_back(survivor);
+
+            // Ha ez a túlélő a kliens játékosa, állítsuk be a clientPlayer-t
+            if (playerData.contains("playerId"))
+            {
+                std::cout << "playerData: " << playerData["playerId"] << std::endl;
+                std::cout << "Client Id: " << client->getId() << std::endl;
+                if (client->getId() == playerData["playerId"]) {
+                    clientPlayer.setPosition(playerData["position"][0], playerData["position"][1]);
+
+                }
+            }
         }
     }
 
@@ -155,14 +166,14 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
     }
 }
 
-void WindowApp::renderGame(const json& gameData, const Player& clientPlayer, bool showFullMap) {
+void WindowApp::renderGame(const json& gameData, Player& clientPlayer, bool showFullMap) {
     std::vector<std::vector<int>> maze;
     std::vector<Survivor> survivors;
     Killer killer(0, 0, { sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown });
     std::vector<Task> tasks;
 
     // Game data feldolgozása
-    processGameData(gameData, maze, survivors, killer, tasks);
+    processGameData(gameData, maze, survivors, killer, tasks, clientPlayer);
 
     // Renderelés
     mainWindow->clear();
@@ -173,8 +184,11 @@ void WindowApp::renderGame(const json& gameData, const Player& clientPlayer, boo
     // Karakterek kirajzolása
     for (const auto& survivor : survivors) {
         survivor.render(*mainWindow);
+        std::cout << "Survivor Pos: " << survivor.position.x << "," << survivor.position.y << std::endl;
+        
     }
     killer.render(*mainWindow);
+    std::cout << "Killer Pos: " << killer.position.x << "," << killer.position.y << std::endl;
 
     // Feladatok kirajzolása
     for (const auto& task : tasks) {

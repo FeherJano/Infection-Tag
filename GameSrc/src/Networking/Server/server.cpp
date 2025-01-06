@@ -136,7 +136,15 @@ void CatGameServer::generateGameData() {
     // Gyilkos pozíciójának randomizálása
     sf::Vector2f killerPos = generateRandomPosition(maze, 1, 1);
     killer.position = killerPos;
-    gameData["killer"] = killer.to_json();
+    auto killerData = killer.to_json();
+    killerData["playerId"] = ""; // Gyilkos azonosítója (alapértelmezés)
+    for (const auto& [playerId, role] : playerRoles) {
+        if (role == "Killer") {
+            killerData["playerId"] = playerId; // Gyilkoshoz rendeljük az azonosítót
+            break;
+        }
+    }
+    gameData["killer"] = killerData;
 
     // Túlélők pozíciójának randomizálása
     for (const auto& [playerId, role] : playerRoles) {
@@ -144,12 +152,16 @@ void CatGameServer::generateGameData() {
             sf::Vector2f survivorPos = generateRandomPosition(maze, 1, 1);
             Survivor survivor(survivorPos.x, survivorPos.y, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
             survivors.push_back(survivor);
-            gameData["players"].push_back(survivor.to_json());
+
+            auto survivorData = survivor.to_json();
+            survivorData["playerId"] = playerId; // Survivor-hez azonosító hozzáadása
+            gameData["players"].push_back(survivorData);
         }
     }
 
-    std::cout << "Game data generated:\n" << std::endl;
+    std::cout << "Game data generated:\n" << gameData.dump(4) << std::endl; // Debug: Ellenőrizzük a JSON szerkezetet
 }
+
 
 
 void CatGameServer::broadcastGameData() {

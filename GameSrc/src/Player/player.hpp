@@ -28,6 +28,8 @@ public:
     virtual void render(sf::RenderWindow& window) const = 0;
 
     void from_json(const json& j);
+    sf::Vector2f getPosition() const { return position; }
+    void setPosition(float x, float y) { position = sf::Vector2f(x, y); }
 };
 
 class Survivor : public Player {
