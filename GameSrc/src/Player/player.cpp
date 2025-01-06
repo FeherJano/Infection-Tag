@@ -60,6 +60,36 @@ void Player::move(float deltaTime, const std::vector<std::vector<int>>& maze) {
     }
 }
 
+void Player::moveWithDirection(const sf::Vector2f& direction, float deltaTime, const std::vector<std::vector<int>>& maze) {
+    float length = sqrt(direction.x * direction.x + direction.y * direction.y);
+    float dirX = 0.0f, dirY = 0.0f;
+
+    if (length > 0.0f) {
+        dirX = direction.x / length;
+        dirY = direction.y / length;
+    }
+
+    sf::Vector2f offset(dirX * moveSpeed * deltaTime, dirY * moveSpeed * deltaTime);
+
+    // Ellenőrizzük az X irányú mozgást
+    sf::Vector2f newXPos = position + sf::Vector2f(offset.x, 0);
+    if (!checkCollision(newXPos, CELL_SIZE, maze)) {
+        position.x += offset.x;
+    }
+
+    // Ellenőrizzük az Y irányú mozgást
+    sf::Vector2f newYPos = position + sf::Vector2f(0, offset.y);
+    if (!checkCollision(newYPos, CELL_SIZE, maze)) {
+        position.y += offset.y;
+    }
+
+    // Frissítjük az utolsó irányt
+    if (dirX != 0 || dirY != 0) {
+        lastDirection = sf::Vector2f(dirX, dirY);
+    }
+}
+
+
 void Player::update(float deltaTime) {
     if (hitCooldownTimer > 0) {
         hitCooldownTimer -= deltaTime;

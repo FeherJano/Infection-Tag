@@ -63,6 +63,12 @@ void CatGameServer::listen() {
                     << senderEndpoint.address().to_string() << ":" << senderEndpoint.port()
                     << " as " << playerRoles[playerId] << std::endl;
             }
+            else if (request["type"] == "input") {
+                std::string playerId = getPlayerIdByEndpoint(senderEndpoint);
+                sf::Vector2f direction(request["direction"][0], request["direction"][1]);
+                processPlayerInput(playerId, direction);
+                broadcastGameData();
+            }
             else if (request["type"] == "ack") {
                 std::cout << "Acknowledgment received from "
                     << senderEndpoint.address().to_string() << ":" << senderEndpoint.port() << std::endl;
@@ -113,16 +119,15 @@ std::vector<std::vector<std::pair<int, int>>> CatGameServer::compressMap(const s
     return compressedMap;
 }
 
-
 void CatGameServer::generateGameData() {
     // Térkép generálása
-    std::vector<std::vector<int>> maze(HEIGHT, std::vector<int>(WIDTH, 0));
+    maze.resize(HEIGHT, std::vector<int>(WIDTH, 0));
     placeObjects(maze);
     auto compressedMap = compressMap(maze);
     gameData["map"] = compressedMap;
 
     // Feladatok létrehozása
-    std::vector<Task> tasks;
+    tasks.clear();
     placeTasks(tasks, maze, playersEndpoints.size());
     gameData["tasks"] = json::array();
     for (const auto& task : tasks) {
@@ -130,8 +135,8 @@ void CatGameServer::generateGameData() {
     }
 
     // Játékosok létrehozása
-    std::vector<Survivor> survivors;
-    Killer killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+    survivors.clear();
+    killer = Killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
 
     // Gyilkos pozíciójának randomizálása
     sf::Vector2f killerPos = generateRandomPosition(maze, 1, 1);
@@ -193,3 +198,46 @@ void CatGameServer::broadcastGameData() {
         }
     }
 }
+
+void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Vector2f& direction) {
+    const float deltaTime = 0.016f; // Példa időköz (60 FPS esetén ~16 ms)
+
+    if (playerRoles[playerId] == "Survivor") {
+        // Survivors között keresés
+        for (auto& survivor : survivors) {
+            if (survivor.to_json()["playerId"] == playerId) {
+                // Mozgatás az irányvektor alapján
+                survivor.moveWithDirection(direction, deltaTime, maze);
+
+                // Frissítsük a gameData-ban a survivor pozícióját
+                for (auto& playerData : gameData["players"]) {
+                    if (playerData["playerId"] == playerId) {
+                        playerData["position"] = { survivor.getPosition().x, survivor.getPosition().y };
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+    else if (playerRoles[playerId] == "Killer") {
+        // Killer mozgatása
+        killer.moveWithDirection(direction, deltaTime, maze);
+
+        // Frissítsük a gameData-ban a killer pozícióját
+        gameData["killer"]["position"] = { killer.getPosition().x, killer.getPosition().y };
+
+        std::cerr << "Killer position: " << killer.getPosition().x << ", " << killer.getPosition().y << std::endl;
+    }
+}
+
+
+std::string CatGameServer::getPlayerIdByEndpoint(const asio::ip::udp::endpoint& endpoint) {
+    for (const auto& [playerId, playerEndpoint] : playersEndpoints) {
+        if (playerEndpoint == endpoint) {
+            return playerId;
+        }
+    }
+    throw std::runtime_error("Player not found for the given endpoint.");
+}
+

@@ -190,7 +190,7 @@ void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& ma
 
     sf::Vector2f playerPos = player.position;
 
-    std::cout << "Rendering map for player at: (" << playerPos.x << ", " << playerPos.y << ")" << std::endl;
+    //std::cout << "Rendering map for player at: (" << playerPos.x << ", " << playerPos.y << ")" << std::endl;
 
 
     for (int i = 0; i < HEIGHT; ++i) {
@@ -230,20 +230,44 @@ void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& ma
 
 
 bool checkCollision(sf::Vector2f position, float playerSize, const std::vector<std::vector<int>>& maze) {
-    // Take player's size into account (pSize = half of the character's width/height)
-    float pSize = playerSize - 2.0f;  // Player "radius"
+    // Ellenőrizd a maze méretét
+    if (maze.empty() || maze[0].empty()) {
+        std::cerr << "Error: Maze is empty!" << std::endl;
+        return true; // Ha nincs érvényes térkép, számítsd ütközésnek
+    }
 
-    // Player's edges (left, right, top, bottom)
+    // Player méretének figyelembevétele
+    float pSize = playerSize - 2.0f;
+
+    // Játékos szélei (left, right, top, bottom)
     float left = position.x;
     float right = position.x + pSize;
     float top = position.y;
     float bottom = position.y + pSize;
 
-    // Check for walls around the player
-    bool collisionDetected = isBlocked(static_cast<int>(left / CELL_SIZE), static_cast<int>(top / CELL_SIZE), maze) ||
-        isBlocked(static_cast<int>(right / CELL_SIZE), static_cast<int>(top / CELL_SIZE), maze) ||
-        isBlocked(static_cast<int>(left / CELL_SIZE), static_cast<int>(bottom / CELL_SIZE), maze) ||
-        isBlocked(static_cast<int>(right / CELL_SIZE), static_cast<int>(bottom / CELL_SIZE), maze);
+    // Cella koordináták kiszámítása
+    int leftCell = static_cast<int>(left / CELL_SIZE);
+    int rightCell = static_cast<int>(right / CELL_SIZE);
+    int topCell = static_cast<int>(top / CELL_SIZE);
+    int bottomCell = static_cast<int>(bottom / CELL_SIZE);
+
+    // Debug log az indexekhez
+    std::cout << "Checking collision at: leftCell=" << leftCell
+        << ", rightCell=" << rightCell
+        << ", topCell=" << topCell
+        << ", bottomCell=" << bottomCell << std::endl;
+
+    // Határértékek ellenőrzése
+    if (leftCell < 0 || rightCell >= static_cast<int>(maze[0].size()) ||
+        topCell < 0 || bottomCell >= static_cast<int>(maze.size())) {
+        return true; // Ha bármelyik cella kívül esik, ütközésnek számít
+    }
+
+    // Ütközések ellenőrzése
+    bool collisionDetected = isBlocked(leftCell, topCell, maze) ||
+        isBlocked(rightCell, topCell, maze) ||
+        isBlocked(leftCell, bottomCell, maze) ||
+        isBlocked(rightCell, bottomCell, maze);
 
     return collisionDetected;
 }

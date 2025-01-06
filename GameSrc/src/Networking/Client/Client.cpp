@@ -136,3 +136,14 @@ void Client::waitForGameData() {
     }
 }
 
+void Client::sendPlayerInput(const sf::Vector2f& direction) {
+    try {
+        json inputMsg;
+        inputMsg["type"] = "input";
+        inputMsg["direction"] = { direction.x, direction.y };
+        socket.send_to(asio::buffer(inputMsg.dump()), serverEndpoint);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error sending player input: " << e.what() << std::endl;
+    }
+}

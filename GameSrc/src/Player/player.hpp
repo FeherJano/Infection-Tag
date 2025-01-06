@@ -26,10 +26,11 @@ public:
     void move(float deltaTime, const std::vector<std::vector<int>>& maze);
     virtual void update(float deltaTime);
     virtual void render(sf::RenderWindow& window) const = 0;
-
+    
     void from_json(const json& j);
     sf::Vector2f getPosition() const { return position; }
     void setPosition(float x, float y) { position = sf::Vector2f(x, y); }
+    void moveWithDirection(const sf::Vector2f& direction, float deltaTime, const std::vector<std::vector<int>>& maze);
 };
 
 class Survivor : public Player {
