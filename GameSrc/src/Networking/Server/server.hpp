@@ -38,8 +38,6 @@ public:
     void processPlayerInput(const std::string& playerId, const sf::Vector2f& direction);
     std::string getPlayerIdByEndpoint(const asio::ip::udp::endpoint& endpoint);
 
-
-
 private:
     asio::ip::udp::socket socket;
     std::unordered_map<std::string, asio::ip::udp::endpoint> players;
