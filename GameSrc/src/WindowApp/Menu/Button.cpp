@@ -1,5 +1,10 @@
 ﻿#include "Button.hpp"
-#include "../../Utility/logging.hpp"
+#include <iostream>
+
+const int err_Fatal = -1;
+void logErr(const std::string& errorMessage) {
+	std::cerr << "Error: " << errorMessage << std::endl;
+}
 
 //STATIC CLASS VARIABLES DEFINED HERE
 
@@ -15,10 +20,11 @@ const sf::Color Button::activatedColor2 = sf::Color::Yellow; //user clicked on t
 Button::Button(const sf::RenderWindow& renderWindow, sf::Vector2f pos, sf::Vector2f size, std::string text, uint16_t id) :
 	uiElement(&renderWindow, pos, size, id), body(sf::RectangleShape(size)), label(sf::Text()), font(new sf::Font())
 {
-	if (!font->loadFromFile("./src/Utility/Fonts/Raleway-Regular.ttf")) { // Use a valid path to a .ttf file
-		logErr(noSuitableFontException().what())
+	if (!font->loadFromFile("./src/Utility/Fonts/Raleway-Regular.ttf")) {
+		logErr("Failed to load font: Raleway-Regular.ttf");
 		exit(err_Fatal);
 	}
+
 	try {
 		label.setFont(*font);
 		label.setString(text);
