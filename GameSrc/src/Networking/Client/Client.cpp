@@ -35,17 +35,18 @@ std::string Client::connect() {
 
         if (response["type"] == "connected") {
             //std::string playerId = response["playerId"];
-            setId(response["playerId"]);
+            std::string playerId = response["playerId"];
+            setId(playerId);
             if (response.contains("role") && !response["role"].is_null()) {
                 std::string role = response["role"];
 
                 if (role == "Killer") {
                     // Killer objektum létrehozása
-                    player = std::make_unique<Killer>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D});
+                    player = std::make_unique<Killer>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D}, playerId);
                 }
                 else if (role == "Survivor") {
                     // Survivor objektum létrehozása
-                    player = std::make_unique<Survivor>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D});
+                    player = std::make_unique<Survivor>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D}, playerId);
                 }
                 else {
                     std::cerr << "Unknown role received: " << role << std::endl;
@@ -175,7 +176,7 @@ void Client::ClientFunction() {
         std::cout << "Client listening for data..." << std::endl;
         //listen();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
+        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
     }
 }
 

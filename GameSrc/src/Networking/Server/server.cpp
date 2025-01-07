@@ -21,7 +21,7 @@ void CatGameServer::ServerFunction() {
             setupGameState();
             currentState = serverStateGame; // Állapot frissítése a játék indítása után
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(50)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
+        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
     }
 }
 
@@ -140,7 +140,6 @@ void CatGameServer::generateGameData() {
 
     // Játékosok létrehozása
     survivors.clear();
-    killer = Killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
 
     auto playerPositions = std::vector<sf::Vector2f>(); //contains the randomized player positions, used to give players nice spawn positions
 
@@ -154,9 +153,11 @@ void CatGameServer::generateGameData() {
     for (const auto& [playerId, role] : playerRoles) {
         if (role == "Killer") {
             killerData["playerId"] = playerId; // Gyilkoshoz rendeljük az azonosítót
+            killer = Killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerId);
             break;
         }
     }
+    
     gameData["killer"] = killerData;
 
     // Túlélők pozíciójának randomizálása
@@ -164,7 +165,7 @@ void CatGameServer::generateGameData() {
         if (role == "Survivor") {
             sf::Vector2f survivorPos = generateRandomPosition(maze, 1, 1, playerPositions);
             playerPositions.push_back(survivorPos);
-            Survivor survivor(survivorPos.x, survivorPos.y, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+            Survivor survivor(survivorPos.x, survivorPos.y, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerId);
             survivors.push_back(survivor);
 
             auto survivorData = survivor.to_json();
@@ -212,10 +213,16 @@ void CatGameServer::broadcastGameData() {
 void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Vector2f& direction) {
     const float deltaTime = 0.016f; // Példa időköz (60 FPS esetén ~16 ms)
 
+    std::cout << "Processing input for playerId: " << playerId << std::endl;
+
     if (playerRoles[playerId] == "Survivor") {
+        std::cout << "Player is a Survivor." << std::endl;
         // Survivors között keresés
         for (auto& survivor : survivors) {
-            if (survivor.to_json()["playerId"] == playerId) {
+            auto survivorData = survivor.to_json();
+            std::cout << "Checking survivor with playerId: " << survivorData["playerId"] << std::endl;
+
+            if (survivorData["playerId"] == playerId) {
                 // Mozgatás az irányvektor alapján
                 survivor.moveWithDirection(direction, deltaTime, maze);
 
@@ -223,6 +230,7 @@ void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Ve
                 for (auto& playerData : gameData["players"]) {
                     if (playerData["playerId"] == playerId) {
                         playerData["position"] = { survivor.getPosition().x, survivor.getPosition().y };
+                        std::cout << "Updated Survivor position: " << survivor.getPosition().x << ", " << survivor.getPosition().y << std::endl;
                         break;
                     }
                 }
@@ -231,6 +239,7 @@ void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Ve
         }
     }
     else if (playerRoles[playerId] == "Killer") {
+        std::cout << "Player is a Killer." << std::endl;
         // Killer mozgatása
         killer.moveWithDirection(direction, deltaTime, maze);
 
@@ -238,6 +247,9 @@ void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Ve
         gameData["killer"]["position"] = { killer.getPosition().x, killer.getPosition().y };
 
         std::cerr << "Killer position: " << killer.getPosition().x << ", " << killer.getPosition().y << std::endl;
+    }
+    else {
+        std::cout << "Unknown role for playerId: " << playerId << std::endl;
     }
 }
 

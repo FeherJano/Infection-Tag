@@ -188,7 +188,7 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
     if (gameData.contains("players") && gameData["players"].is_array()) {
         survivors.clear();
         for (const auto& playerData : gameData["players"]) {
-            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerData["playerId"]);
             survivor.from_json(playerData);
             survivors.push_back(survivor);
 
@@ -225,7 +225,7 @@ void WindowApp::processIncomingMessage(const json& message, Player& clientPlayer
     if (message.contains("players")) {
         survivors.clear();
         for (const auto& playerData : message["players"]) {
-            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerData["playerId"]);
             survivor.from_json(playerData);
             survivors.push_back(survivor);
 
