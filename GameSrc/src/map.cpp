@@ -346,18 +346,43 @@ bool isCellInKillerSight(const Player& killer, int gridX, int gridY, const std::
 
 #include <random>
 
+
+// Returns the distance to the player closest to thisPlayer
+float minDistanceFromOtherPlayers(const std::vector<sf::Vector2f>& players, sf::Vector2f thisPlayer) {
+    if (players.empty()) {
+        return MIN_SPAWN_PLAYER_DISTANCE;
+    }
+
+    float minDist = WIDTH * HEIGHT * CELL_SIZE; //The maximum possible distance is the area of the map
+
+    for (const auto& otherPlayer : players) {
+        float dist = std::sqrt( std::pow(thisPlayer.x - otherPlayer.x, 2) + std::pow(thisPlayer.y - otherPlayer.y, 2));
+        minDist = std::min(minDist, dist);
+    }
+    return minDist;
+}
+
+
+
+
 // Random pozíció generálása
-sf::Vector2f generateRandomPosition(const std::vector<std::vector<int>>& maze, int cellWidth, int cellHeight) {
+sf::Vector2f generateRandomPosition(const std::vector<std::vector<int>>& maze, int cellWidth, int cellHeight, const std::vector<sf::Vector2f> &playerPositions) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distX(0, WIDTH - cellWidth);
     std::uniform_int_distribution<> distY(0, HEIGHT - cellHeight);
 
     int x, y;
+    sf::Vector2f playerPosOnMap;
+
     do {
         x = distX(gen);
         y = distY(gen);
-    } while (!canPlaceObject(maze, x, y, cellWidth, cellHeight));
+        playerPosOnMap = sf::Vector2f( x * CELL_SIZE, y * CELL_SIZE );
+    } while (!canPlaceObject(maze, x, y, cellWidth, cellHeight) && 
+        minDistanceFromOtherPlayers(playerPositions,playerPosOnMap) >= MIN_SPAWN_PLAYER_DISTANCE);
 
-    return sf::Vector2f(x * CELL_SIZE, y * CELL_SIZE);
+    return playerPosOnMap;
 }
+
+

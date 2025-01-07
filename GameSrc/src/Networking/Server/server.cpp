@@ -145,8 +145,12 @@ void CatGameServer::generateGameData() {
     survivors.clear();
     killer = Killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
 
+    auto playerPositions = std::vector<sf::Vector2f>(); //contains the randomized player positions, used to give players nice spawn positions
+
     // Gyilkos pozíciójának randomizálása
-    sf::Vector2f killerPos = generateRandomPosition(maze, 1, 1);
+    sf::Vector2f killerPos = generateRandomPosition(maze, 1, 1,playerPositions);
+    playerPositions.push_back(killerPos);
+
     killer.position = killerPos;
     auto killerData = killer.to_json();
     killerData["playerId"] = ""; // Gyilkos azonosítója (alapértelmezés)
@@ -161,7 +165,8 @@ void CatGameServer::generateGameData() {
     // Túlélők pozíciójának randomizálása
     for (const auto& [playerId, role] : playerRoles) {
         if (role == "Survivor") {
-            sf::Vector2f survivorPos = generateRandomPosition(maze, 1, 1);
+            sf::Vector2f survivorPos = generateRandomPosition(maze, 1, 1, playerPositions);
+            playerPositions.push_back(survivorPos);
             Survivor survivor(survivorPos.x, survivorPos.y, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
             survivors.push_back(survivor);
 
@@ -203,6 +208,7 @@ void CatGameServer::broadcastGameData() {
         catch (const std::exception& e) {
             std::cerr << "Failed to send game data to player " << playerId << ": " << e.what() << std::endl;
         }
+
     }
 }
 

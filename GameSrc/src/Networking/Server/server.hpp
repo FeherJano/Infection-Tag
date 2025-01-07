@@ -5,9 +5,9 @@
 #include <vector>
 #include <queue>
 #include <chrono>
+#include <iostream>
 #include "nlohmann/json.hpp"
 #include "asio.hpp"
-#include "../../Utility/logging.hpp"
 #include "../MessageTypes.hpp"
 #include "../../task.hpp"
 #include "../../map.hpp"
@@ -37,8 +37,6 @@ public:
     std::unordered_map<std::string, std::string> playerRoles; // "Killer" vagy "Survivor"
     void processPlayerInput(const std::string& playerId, const sf::Vector2f& direction);
     std::string getPlayerIdByEndpoint(const asio::ip::udp::endpoint& endpoint);
-
-
 
 private:
     asio::ip::udp::socket socket;
