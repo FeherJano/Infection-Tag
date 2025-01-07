@@ -5,9 +5,9 @@
 #include <vector>
 #include <queue>
 #include <chrono>
+#include <iostream>
 #include "nlohmann/json.hpp"
 #include "asio.hpp"
-#include "../../Utility/logging.hpp"
 #include "../MessageTypes.hpp"
 #include "../../task.hpp"
 #include "../../map.hpp"

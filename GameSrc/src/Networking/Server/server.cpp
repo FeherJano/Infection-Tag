@@ -196,6 +196,7 @@ void CatGameServer::broadcastGameData() {
         catch (const std::exception& e) {
             std::cerr << "Failed to send game data to player " << playerId << ": " << e.what() << std::endl;
         }
+
     }
 }
 
