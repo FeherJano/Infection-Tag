@@ -70,7 +70,7 @@ void CatGameServer::listen() {
                 
                 std::cout << "pROCESSED pOSITION: "
                     << killer.getPosition().x << "," << killer.getPosition().y << std::endl;
-                gameData.clear();
+                
 
                 gameData["killer"] = killer.to_json();;
 

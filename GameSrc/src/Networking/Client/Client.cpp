@@ -136,37 +136,41 @@ void Client::waitForGameData() {
     }
 }
 
-void Client::listen() {
+void Client::listen(std::function<void(const json&)> onDataReceived) {
     try {
+        std::string fullData;
         while (true) {
             char buffer[1024];
             asio::ip::udp::endpoint senderEndpoint;
             size_t len = socket.receive_from(asio::buffer(buffer), senderEndpoint);
 
-            // Adat feldolgozása
-            std::string data(buffer, len);
-            gameData = json::parse(data);
+            std::string chunk(buffer, len);
 
-            // Gyilkos pozíciójának frissítése
-            if (gameData.contains("killer")) {
-                player->from_json(gameData["killer"]);
-                std::cout << "Killer updated: " << player->getPosition().x << ", " << player->getPosition().y << std::endl;
-            }
-
-            // Túlélők pozíciójának frissítése
-            if (gameData.contains("players")) {
-                for (const auto& playerData : gameData["players"]) {
-                    if (playerData["playerId"] == playerId) {
-                        player->from_json(playerData);
-                        std::cout << "Player updated: " << player->getPosition().x << ", " << player->getPosition().y << std::endl;
-                        break;
-                    }
+            // Ellenőrizzük az "END_OF_DATA" jelzést
+            if (chunk == "END_OF_DATA") {
+                if (!fullData.empty()) {
+                    json parsedData = json::parse(fullData);
+                    onDataReceived(parsedData); // Adatok továbbítása a WindowApp felé
+                    fullData.clear();
                 }
+            }
+            else {
+                fullData += chunk;
             }
         }
     }
     catch (const std::exception& e) {
         std::cerr << "Error in listen: " << e.what() << std::endl;
+    }
+}
+
+
+void Client::ClientFunction() {
+    while (true) {
+        std::cout << "Client listening for data..." << std::endl;
+        //listen();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
     }
 }
 
