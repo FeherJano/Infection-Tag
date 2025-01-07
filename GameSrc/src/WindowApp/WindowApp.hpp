@@ -37,6 +37,13 @@ private:
     std::unique_ptr<CatGameServer> server;
     std::unique_ptr<Client> client;
 
+    std::vector<Survivor> survivors;
+    Killer killer;
+    std::vector<std::vector<int>> maze;
+    std::vector<Task> tasks;
+
+    bool isInitialized = false;
+
     void initializeMenu();
     void initializeLobby();
     void initializeClientLobby();
@@ -45,6 +52,8 @@ private:
     void processInput();
     void renderElements();
     void renderGame(const json& gameData, Player& clientPlayer, bool showFullMap);
+    void processIncomingMessage(const json& message, Player& clientPlayer); // JSON üzenet feldolgozása
+
     void processGameData(const json& gameData,
         std::vector<std::vector<int>>& maze,
         std::vector<Survivor>& survivors,

@@ -21,7 +21,7 @@ void CatGameServer::ServerFunction() {
             setupGameState();
             currentState = serverStateGame; // Állapot frissítése a játék indítása után
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
+        std::this_thread::sleep_for(std::chrono::milliseconds(50)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
     }
 }
 
@@ -67,12 +67,9 @@ void CatGameServer::listen() {
                 std::string playerId = getPlayerIdByEndpoint(senderEndpoint);
                 sf::Vector2f direction(request["direction"][0], request["direction"][1]);
                 processPlayerInput(playerId, direction);
-                
-                std::cout << "pROCESSED pOSITION: "
-                    << killer.getPosition().x << "," << killer.getPosition().y << std::endl;
-                
 
-                gameData["killer"] = killer.to_json();;
+                gameData["killer"] = killer.to_json();
+                gameData["killer"]["playerId"] = playerId;
 
                 broadcastGameData();
             }

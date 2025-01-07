@@ -58,8 +58,11 @@ void WindowApp::startServer() {
 
     if (client->connect() != "") {
         //std::cout << "Local Client Connected as Host." << std::endl;
+
         std::thread([this]() {
-            client->waitForGameData();
+            client->cListen([this](const json& message) {
+                processIncomingMessage(message, *client->getPlayer());
+                });
             }).detach();
     }
     else {
@@ -67,19 +70,19 @@ void WindowApp::startServer() {
     }
 }
 
-
-
-
-
 bool WindowApp::startClient() {
     client = std::make_unique<Client>("localhost", 8085, ioContext);
     std::cout << "Starting Client " << std::endl;
 
     if (client->connect() != "") {
         std::cout << "Client Connected" << std::endl;
+
         std::thread([this]() {
-            client->waitForGameData(); // Játékadatok fogadása
+            client->cListen([this](const json& message) {
+                processIncomingMessage(message, *client->getPlayer());
+                });
             }).detach();
+
         return true;
     }
     std::cout << "Starting Client Failed " << std::endl;
@@ -211,14 +214,61 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
     }
 }
 
-void WindowApp::renderGame(const json& gameData, Player& clientPlayer, bool showFullMap) {
-    std::vector<std::vector<int>> maze;
-    std::vector<Survivor> survivors;
-    Killer killer(0, 0, { sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown });
-    std::vector<Task> tasks;
+void WindowApp::processIncomingMessage(const json& message, Player& clientPlayer) {
+    if (message.contains("map")) {
+        auto compressedMap = message["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
+        auto decompressedMap = client->decompressMap(compressedMap);
+        // Térkép frissítése
+        maze = decompressedMap;
+    }
 
-    // Game data feldolgozása
-    processGameData(gameData, maze, survivors, killer, tasks, clientPlayer);
+    if (message.contains("players")) {
+        survivors.clear();
+        for (const auto& playerData : message["players"]) {
+            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+            survivor.from_json(playerData);
+            survivors.push_back(survivor);
+
+            if (playerData.contains("playerId"))
+            {
+                if (client->getId() == playerData["playerId"]) {
+                    clientPlayer.setPosition(playerData["position"][0], playerData["position"][1]);
+
+                }
+            }
+        }
+    }
+
+    if (message.contains("killer")) {
+        auto killerData = message["killer"];
+        killer.from_json(killerData);
+
+        if (killerData.contains("playerId")) {
+
+            if (client->getId() == killerData["playerId"]) {
+                clientPlayer.setPosition(killerData["position"][0], killerData["position"][1]);
+            }
+            else {
+                std::cout << "Client ID does not match killer playerId." << std::endl;
+            }
+        }
+        else {
+            std::cout << "Killer data does not contain playerId." << std::endl;
+        }
+    }
+
+}
+
+
+
+void WindowApp::renderGame(const json& gameData, Player& clientPlayer, bool showFullMap) {
+
+    if (!isInitialized) {
+        std::cout << "Running processGameData for initialization..." << std::endl;
+        processGameData(gameData, maze, survivors, killer, tasks, clientPlayer);
+        std::cout << "Initialization completed." << std::endl;
+        isInitialized = true;
+    }
 
     // Renderelés
     mainWindow->clear();

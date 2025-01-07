@@ -90,55 +90,11 @@ std::vector<std::vector<int>> Client::decompressMap(const std::vector<std::vecto
 }
 
 
-void Client::waitForGameData() {
-    try {
-        char buffer[1024];
-        asio::ip::udp::endpoint senderEndpoint;
-        std::string fullData;
-
-        while (true) {
-            size_t len = socket.receive_from(asio::buffer(buffer), senderEndpoint);
-            std::string chunk(buffer, len);
-
-            // Ellenőrizd az "END_OF_DATA" jelzést
-            if (chunk == "END_OF_DATA") {
-                break;
-            }
-
-            fullData += chunk; // Folyamatosan építsd a teljes adatot
-        }
-
-        // Debug: Ellenőrizd az összeállított adatot
-        std::cout << "Received full data: " << fullData << std::endl;
-
-        // JSON parszolás
-        gameData = json::parse(fullData);
-        //std::cout << "Parsed game data successfully.\n" << gameData.dump(4) << std::endl;
-
-        // Tömörített map visszaállítása
-        auto compressedMap = gameData["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
-        auto decompressedMap = decompressMap(compressedMap);
-
-        std::cout << "Decompressed map size: " << decompressedMap.size() << "x" << decompressedMap[0].size() << std::endl;
-
-        // Nyugtázó üzenet küldése a szervernek
-        json ackMsg;
-        ackMsg["type"] = "ack";
-        socket.send_to(asio::buffer(ackMsg.dump()), senderEndpoint);
-
-        std::cout << "Acknowledgment sent to server. Game data ready." << std::endl;
-
-        // Jelöljük az adatok állapotát
-        gameDataReady = true;
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Error receiving game data: " << e.what() << std::endl;
-    }
-}
-
-void Client::listen(std::function<void(const json&)> onDataReceived) {
+void Client::cListen(std::function<void(const json&)> onDataReceived) {
     try {
         std::string fullData;
+        bool initialDataProcessed = false;
+
         while (true) {
             char buffer[1024];
             asio::ip::udp::endpoint senderEndpoint;
@@ -146,21 +102,70 @@ void Client::listen(std::function<void(const json&)> onDataReceived) {
 
             std::string chunk(buffer, len);
 
-            // Ellenőrizzük az "END_OF_DATA" jelzést
-            if (chunk == "END_OF_DATA") {
-                if (!fullData.empty()) {
-                    json parsedData = json::parse(fullData);
-                    onDataReceived(parsedData); // Adatok továbbítása a WindowApp felé
-                    fullData.clear();
+            if (!initialDataProcessed) {
+                // Inicializációs adatokat fogadunk
+                if (chunk == "END_OF_DATA") {
+                    try {
+                        gameData = json::parse(fullData);
+
+                        // Debug: Ellenőrzés az összeállított adatról
+                        std::cout << "Received initial full data: " << fullData.size() << " bytes" << std::endl;
+
+                        // Tömörített térkép visszaállítása
+                        auto compressedMap = gameData["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
+                        auto decompressedMap = decompressMap(compressedMap);
+
+                        std::cout << "Decompressed map size: " << decompressedMap.size() << "x" << decompressedMap[0].size() << std::endl;
+
+                        // Nyugtázás a szerver felé
+                        json ackMsg;
+                        ackMsg["type"] = "ack";
+                        socket.send_to(asio::buffer(ackMsg.dump()), senderEndpoint);
+
+                        // Jelöljük az inicializációs adatok feldolgozottságát
+                        gameDataReady = true;
+                        initialDataProcessed = true;
+                        fullData.clear();
+
+                        // Továbbítjuk az inicializációs adatokat
+                        onDataReceived(gameData);
+                    }
+                    catch (const std::exception& e) {
+                        std::cerr << "Error parsing initial JSON data: " << e.what() << std::endl;
+                    }
+                }
+                else {
+                    fullData += chunk; // Csomagokat összefűzzük
                 }
             }
             else {
-                fullData += chunk;
+                // Játékbeli frissítések fogadása
+                try {
+                    if (chunk == "END_OF_DATA") {
+                        if (!fullData.empty()) {
+                            json parsedData = json::parse(fullData);
+
+                            // Debug: Ellenőrzés az érkező adatról
+                            std::cout << "Received update: " << fullData.size() << " bytes" << std::endl;
+
+                            // Továbbítjuk az adatokat
+                            onDataReceived(parsedData);
+
+                            fullData.clear(); // Buffer ürítése a következő üzenethez
+                        }
+                    }
+                    else {
+                        fullData += chunk; // Csomag hozzáfűzése
+                    }
+                }
+                catch (const std::exception& e) {
+                    std::cerr << "Error parsing update JSON data: " << e.what() << std::endl;
+                }
             }
         }
     }
     catch (const std::exception& e) {
-        std::cerr << "Error in listen: " << e.what() << std::endl;
+        std::cerr << "Error in cListen: " << e.what() << std::endl;
     }
 }
 
