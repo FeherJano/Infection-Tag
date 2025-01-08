@@ -21,7 +21,7 @@ void CatGameServer::ServerFunction() {
             setupGameState();
             currentState = serverStateGame; // Állapot frissítése a játék indítása után
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
+        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
     }
 }
 
@@ -62,6 +62,16 @@ void CatGameServer::listen() {
                 std::cout << "Player connected: " << playerId << " at "
                     << senderEndpoint.address().to_string() << ":" << senderEndpoint.port()
                     << " as " << playerRoles[playerId] << std::endl;
+            }
+            else if (request["type"] == "input") {
+                std::string playerId = getPlayerIdByEndpoint(senderEndpoint);
+                sf::Vector2f direction(request["direction"][0], request["direction"][1]);
+                processPlayerInput(playerId, direction);
+
+                gameData["killer"] = killer.to_json();
+                gameData["killer"]["playerId"] = playerId;
+
+                broadcastGameData();
             }
             else if (request["type"] == "ack") {
                 std::cout << "Acknowledgment received from "
@@ -113,16 +123,15 @@ std::vector<std::vector<std::pair<int, int>>> CatGameServer::compressMap(const s
     return compressedMap;
 }
 
-
 void CatGameServer::generateGameData() {
     // Térkép generálása
-    std::vector<std::vector<int>> maze(HEIGHT, std::vector<int>(WIDTH, 0));
+    maze.resize(HEIGHT, std::vector<int>(WIDTH, 0));
     placeObjects(maze);
     auto compressedMap = compressMap(maze);
     gameData["map"] = compressedMap;
 
     // Feladatok létrehozása
-    std::vector<Task> tasks;
+    tasks.clear();
     placeTasks(tasks, maze, playersEndpoints.size());
     gameData["tasks"] = json::array();
     for (const auto& task : tasks) {
@@ -130,27 +139,33 @@ void CatGameServer::generateGameData() {
     }
 
     // Játékosok létrehozása
-    std::vector<Survivor> survivors;
-    Killer killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+    survivors.clear();
+
+    auto playerPositions = std::vector<sf::Vector2f>(); //contains the randomized player positions, used to give players nice spawn positions
 
     // Gyilkos pozíciójának randomizálása
-    sf::Vector2f killerPos = generateRandomPosition(maze, 1, 1);
+    sf::Vector2f killerPos = generateRandomPosition(maze, 1, 1,playerPositions);
+    playerPositions.push_back(killerPos);
+
     killer.position = killerPos;
     auto killerData = killer.to_json();
     killerData["playerId"] = ""; // Gyilkos azonosítója (alapértelmezés)
     for (const auto& [playerId, role] : playerRoles) {
         if (role == "Killer") {
             killerData["playerId"] = playerId; // Gyilkoshoz rendeljük az azonosítót
+            killer = Killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerId);
             break;
         }
     }
+    
     gameData["killer"] = killerData;
 
     // Túlélők pozíciójának randomizálása
     for (const auto& [playerId, role] : playerRoles) {
         if (role == "Survivor") {
-            sf::Vector2f survivorPos = generateRandomPosition(maze, 1, 1);
-            Survivor survivor(survivorPos.x, survivorPos.y, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+            sf::Vector2f survivorPos = generateRandomPosition(maze, 1, 1, playerPositions);
+            playerPositions.push_back(survivorPos);
+            Survivor survivor(survivorPos.x, survivorPos.y, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerId);
             survivors.push_back(survivor);
 
             auto survivorData = survivor.to_json();
@@ -191,5 +206,60 @@ void CatGameServer::broadcastGameData() {
         catch (const std::exception& e) {
             std::cerr << "Failed to send game data to player " << playerId << ": " << e.what() << std::endl;
         }
+
     }
 }
+
+void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Vector2f& direction) {
+    const float deltaTime = 0.016f; // Példa időköz (60 FPS esetén ~16 ms)
+
+    std::cout << "Processing input for playerId: " << playerId << std::endl;
+
+    if (playerRoles[playerId] == "Survivor") {
+        std::cout << "Player is a Survivor." << std::endl;
+        // Survivors között keresés
+        for (auto& survivor : survivors) {
+            auto survivorData = survivor.to_json();
+            std::cout << "Checking survivor with playerId: " << survivorData["playerId"] << std::endl;
+
+            if (survivorData["playerId"] == playerId) {
+                // Mozgatás az irányvektor alapján
+                survivor.moveWithDirection(direction, deltaTime, maze);
+
+                // Frissítsük a gameData-ban a survivor pozícióját
+                for (auto& playerData : gameData["players"]) {
+                    if (playerData["playerId"] == playerId) {
+                        playerData["position"] = { survivor.getPosition().x, survivor.getPosition().y };
+                        std::cout << "Updated Survivor position: " << survivor.getPosition().x << ", " << survivor.getPosition().y << std::endl;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+    else if (playerRoles[playerId] == "Killer") {
+        std::cout << "Player is a Killer." << std::endl;
+        // Killer mozgatása
+        killer.moveWithDirection(direction, deltaTime, maze);
+
+        // Frissítsük a gameData-ban a killer pozícióját
+        gameData["killer"]["position"] = { killer.getPosition().x, killer.getPosition().y };
+
+        std::cerr << "Killer position: " << killer.getPosition().x << ", " << killer.getPosition().y << std::endl;
+    }
+    else {
+        std::cout << "Unknown role for playerId: " << playerId << std::endl;
+    }
+}
+
+
+std::string CatGameServer::getPlayerIdByEndpoint(const asio::ip::udp::endpoint& endpoint) {
+    for (const auto& [playerId, playerEndpoint] : playersEndpoints) {
+        if (playerEndpoint == endpoint) {
+            return playerId;
+        }
+    }
+    throw std::runtime_error("Player not found for the given endpoint.");
+}
+

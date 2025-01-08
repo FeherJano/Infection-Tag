@@ -18,7 +18,6 @@ class Client {
 public:
     Client(const std::string& serverAddress, uint16_t port, asio::io_context& ioContext);
     std::string connect();
-    void waitForGameData();
 
     json getGameData() const { return gameData; }
     bool isGameDataReady() const { return gameDataReady; }
@@ -28,6 +27,11 @@ public:
     void setId(const std::string& id) { playerId = id; }
 
     std::vector<std::vector<int>> decompressMap(const std::vector<std::vector<std::pair<int, int>>>& compressedMap);
+
+    void sendPlayerInput(const sf::Vector2f& direction);
+    void cListen(std::function<void(const json&)> onDataReceived);
+    void ClientFunction();
+
 
 private:
     json gameData;

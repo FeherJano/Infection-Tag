@@ -190,7 +190,7 @@ void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& ma
 
     sf::Vector2f playerPos = player.position;
 
-    std::cout << "Rendering map for player at: (" << playerPos.x << ", " << playerPos.y << ")" << std::endl;
+    //std::cout << "Rendering map for player at: (" << playerPos.x << ", " << playerPos.y << ")" << std::endl;
 
 
     for (int i = 0; i < HEIGHT; ++i) {
@@ -230,20 +230,38 @@ void renderMap(sf::RenderWindow& window, const std::vector<std::vector<int>>& ma
 
 
 bool checkCollision(sf::Vector2f position, float playerSize, const std::vector<std::vector<int>>& maze) {
-    // Take player's size into account (pSize = half of the character's width/height)
-    float pSize = playerSize - 2.0f;  // Player "radius"
+    // Ellenőrizd a maze méretét
+    if (maze.empty() || maze[0].empty()) {
+        std::cerr << "Error: Maze is empty!" << std::endl;
+        return true; // Ha nincs érvényes térkép, számítsd ütközésnek
+    }
 
-    // Player's edges (left, right, top, bottom)
+    // Player méretének figyelembevétele
+    float pSize = playerSize - 2.0f;
+
+    // Játékos szélei (left, right, top, bottom)
     float left = position.x;
     float right = position.x + pSize;
     float top = position.y;
     float bottom = position.y + pSize;
 
-    // Check for walls around the player
-    bool collisionDetected = isBlocked(static_cast<int>(left / CELL_SIZE), static_cast<int>(top / CELL_SIZE), maze) ||
-        isBlocked(static_cast<int>(right / CELL_SIZE), static_cast<int>(top / CELL_SIZE), maze) ||
-        isBlocked(static_cast<int>(left / CELL_SIZE), static_cast<int>(bottom / CELL_SIZE), maze) ||
-        isBlocked(static_cast<int>(right / CELL_SIZE), static_cast<int>(bottom / CELL_SIZE), maze);
+    // Cella koordináták kiszámítása
+    int leftCell = static_cast<int>(left / CELL_SIZE);
+    int rightCell = static_cast<int>(right / CELL_SIZE);
+    int topCell = static_cast<int>(top / CELL_SIZE);
+    int bottomCell = static_cast<int>(bottom / CELL_SIZE);
+
+    // Határértékek ellenőrzése
+    if (leftCell < 0 || rightCell >= static_cast<int>(maze[0].size()) ||
+        topCell < 0 || bottomCell >= static_cast<int>(maze.size())) {
+        return true; // Ha bármelyik cella kívül esik, ütközésnek számít
+    }
+
+    // Ütközések ellenőrzése
+    bool collisionDetected = isBlocked(leftCell, topCell, maze) ||
+        isBlocked(rightCell, topCell, maze) ||
+        isBlocked(leftCell, bottomCell, maze) ||
+        isBlocked(rightCell, bottomCell, maze);
 
     return collisionDetected;
 }
@@ -328,18 +346,43 @@ bool isCellInKillerSight(const Player& killer, int gridX, int gridY, const std::
 
 #include <random>
 
+
+// Returns the distance to the player closest to thisPlayer
+float minDistanceFromOtherPlayers(const std::vector<sf::Vector2f>& players, sf::Vector2f thisPlayer) {
+    if (players.empty()) {
+        return MIN_SPAWN_PLAYER_DISTANCE;
+    }
+
+    float minDist = WIDTH * HEIGHT * CELL_SIZE; //The maximum possible distance is the area of the map
+
+    for (const auto& otherPlayer : players) {
+        float dist = std::sqrt( std::pow(thisPlayer.x - otherPlayer.x, 2) + std::pow(thisPlayer.y - otherPlayer.y, 2));
+        minDist = std::min(minDist, dist);
+    }
+    return minDist;
+}
+
+
+
+
 // Random pozíció generálása
-sf::Vector2f generateRandomPosition(const std::vector<std::vector<int>>& maze, int cellWidth, int cellHeight) {
+sf::Vector2f generateRandomPosition(const std::vector<std::vector<int>>& maze, int cellWidth, int cellHeight, const std::vector<sf::Vector2f> &playerPositions) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distX(0, WIDTH - cellWidth);
     std::uniform_int_distribution<> distY(0, HEIGHT - cellHeight);
 
     int x, y;
+    sf::Vector2f playerPosOnMap;
+
     do {
         x = distX(gen);
         y = distY(gen);
-    } while (!canPlaceObject(maze, x, y, cellWidth, cellHeight));
+        playerPosOnMap = sf::Vector2f( x * CELL_SIZE, y * CELL_SIZE );
+    } while (!canPlaceObject(maze, x, y, cellWidth, cellHeight) && 
+        minDistanceFromOtherPlayers(playerPositions,playerPosOnMap) >= MIN_SPAWN_PLAYER_DISTANCE);
 
-    return sf::Vector2f(x * CELL_SIZE, y * CELL_SIZE);
+    return playerPosOnMap;
 }
+
+

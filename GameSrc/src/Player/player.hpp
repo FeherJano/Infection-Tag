@@ -17,19 +17,21 @@ class Player {
     std::array<sf::Keyboard::Key, 4> movementKeys;
 
 public:
+    std::string playerId;
     sf::Vector2f position;
     sf::Vector2f lastDirection;
     float moveSpeed;
     float hitCooldownTimer = 0.0f;
 
-    Player(float startX, float startY, float speed, std::array<sf::Keyboard::Key, 4>);
+    Player(float startX, float startY, float speed, std::array<sf::Keyboard::Key, 4>, const std::string& id);
     void move(float deltaTime, const std::vector<std::vector<int>>& maze);
     virtual void update(float deltaTime);
     virtual void render(sf::RenderWindow& window) const = 0;
-
+    
     void from_json(const json& j);
     sf::Vector2f getPosition() const { return position; }
     void setPosition(float x, float y) { position = sf::Vector2f(x, y); }
+    void moveWithDirection(const sf::Vector2f& direction, float deltaTime, const std::vector<std::vector<int>>& maze);
 };
 
 class Survivor : public Player {
@@ -39,7 +41,7 @@ public:
     float dyingTimer = 0.0f;  // Timer for the DYING state
     const float maxDyingTime = 30.0f;  // Max time for the DYING state
 
-    Survivor(float startX, float startY, std::array<sf::Keyboard::Key, 4>);
+    Survivor(float startX, float startY, std::array<sf::Keyboard::Key, 4>, const std::string& id);
     void getHit();
     void heal();
     void update(float deltaTime) override;
@@ -52,9 +54,10 @@ public:
 
 class Killer : public Player {
 public:
-    Killer() : Player(0.0f, 0.0f, 0.0f, { sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown }) {}
+    Killer() : Player(0.0f, 0.0f, 0.0f, { sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown }, "") {}
 
-    Killer(float startX, float startY, std::array<sf::Keyboard::Key, 4>);
+
+    Killer(float startX, float startY, std::array<sf::Keyboard::Key, 4>, const std::string& id);
     bool canHit();
     void hit(Survivor& survivor);
     void update(float deltaTime) override;

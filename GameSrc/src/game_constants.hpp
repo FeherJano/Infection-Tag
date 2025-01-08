@@ -16,7 +16,7 @@ const float KILLER_MOVE_SPEED = 120.0f; // Killer speed
 const float KILLER_HIT_COOLDOWN = 1.0f; // Killer attack cooldown
 const float SURVIVOR_HIT_SPEED_BOOST = 100.0f; // Speed boost for survivors when hit
 const int HEALTH_STATE_COUNT = 3; // Number of health states
-
+const float MIN_SPAWN_PLAYER_DISTANCE = 80; //Minimum distance between players when the game starts
 // Health states for survivors
 enum HealthState { HEALTHY, INJURED, DYING, DEAD };
 

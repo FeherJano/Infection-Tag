@@ -35,17 +35,18 @@ std::string Client::connect() {
 
         if (response["type"] == "connected") {
             //std::string playerId = response["playerId"];
-            setId(response["playerId"]);
+            std::string playerId = response["playerId"];
+            setId(playerId);
             if (response.contains("role") && !response["role"].is_null()) {
                 std::string role = response["role"];
 
                 if (role == "Killer") {
                     // Killer objektum létrehozása
-                    player = std::make_unique<Killer>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D});
+                    player = std::make_unique<Killer>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D}, playerId);
                 }
                 else if (role == "Survivor") {
                     // Survivor objektum létrehozása
-                    player = std::make_unique<Survivor>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D});
+                    player = std::make_unique<Survivor>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D}, playerId);
                 }
                 else {
                     std::cerr << "Unknown role received: " << role << std::endl;
@@ -90,49 +91,104 @@ std::vector<std::vector<int>> Client::decompressMap(const std::vector<std::vecto
 }
 
 
-void Client::waitForGameData() {
+void Client::cListen(std::function<void(const json&)> onDataReceived) {
     try {
-        char buffer[1024];
-        asio::ip::udp::endpoint senderEndpoint;
         std::string fullData;
+        bool initialDataProcessed = false;
 
         while (true) {
+            char buffer[1024];
+            asio::ip::udp::endpoint senderEndpoint;
             size_t len = socket.receive_from(asio::buffer(buffer), senderEndpoint);
+
             std::string chunk(buffer, len);
 
-            // Ellenőrizd az "END_OF_DATA" jelzést
-            if (chunk == "END_OF_DATA") {
-                break;
+            if (!initialDataProcessed) {
+                // Inicializációs adatokat fogadunk
+                if (chunk == "END_OF_DATA") {
+                    try {
+                        gameData = json::parse(fullData);
+
+                        // Debug: Ellenőrzés az összeállított adatról
+                        std::cout << "Received initial full data: " << fullData.size() << " bytes" << std::endl;
+
+                        // Tömörített térkép visszaállítása
+                        auto compressedMap = gameData["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
+                        auto decompressedMap = decompressMap(compressedMap);
+
+                        std::cout << "Decompressed map size: " << decompressedMap.size() << "x" << decompressedMap[0].size() << std::endl;
+
+                        // Nyugtázás a szerver felé
+                        json ackMsg;
+                        ackMsg["type"] = "ack";
+                        socket.send_to(asio::buffer(ackMsg.dump()), senderEndpoint);
+
+                        // Jelöljük az inicializációs adatok feldolgozottságát
+                        gameDataReady = true;
+                        initialDataProcessed = true;
+                        fullData.clear();
+
+                        // Továbbítjuk az inicializációs adatokat
+                        onDataReceived(gameData);
+                    }
+                    catch (const std::exception& e) {
+                        std::cerr << "Error parsing initial JSON data: " << e.what() << std::endl;
+                    }
+                }
+                else {
+                    fullData += chunk; // Csomagokat összefűzzük
+                }
             }
+            else {
+                // Játékbeli frissítések fogadása
+                try {
+                    if (chunk == "END_OF_DATA") {
+                        if (!fullData.empty()) {
+                            json parsedData = json::parse(fullData);
 
-            fullData += chunk; // Folyamatosan építsd a teljes adatot
+                            // Debug: Ellenőrzés az érkező adatról
+                            std::cout << "Received update: " << fullData.size() << " bytes" << std::endl;
+
+                            // Továbbítjuk az adatokat
+                            onDataReceived(parsedData);
+
+                            fullData.clear(); // Buffer ürítése a következő üzenethez
+                        }
+                    }
+                    else {
+                        fullData += chunk; // Csomag hozzáfűzése
+                    }
+                }
+                catch (const std::exception& e) {
+                    std::cerr << "Error parsing update JSON data: " << e.what() << std::endl;
+                }
+            }
         }
-
-        // Debug: Ellenőrizd az összeállított adatot
-        std::cout << "Received full data: " << fullData << std::endl;
-
-        // JSON parszolás
-        gameData = json::parse(fullData);
-        //std::cout << "Parsed game data successfully.\n" << gameData.dump(4) << std::endl;
-
-        // Tömörített map visszaállítása
-        auto compressedMap = gameData["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
-        auto decompressedMap = decompressMap(compressedMap);
-
-        std::cout << "Decompressed map size: " << decompressedMap.size() << "x" << decompressedMap[0].size() << std::endl;
-
-        // Nyugtázó üzenet küldése a szervernek
-        json ackMsg;
-        ackMsg["type"] = "ack";
-        socket.send_to(asio::buffer(ackMsg.dump()), senderEndpoint);
-
-        std::cout << "Acknowledgment sent to server. Game data ready." << std::endl;
-
-        // Jelöljük az adatok állapotát
-        gameDataReady = true;
     }
     catch (const std::exception& e) {
-        std::cerr << "Error receiving game data: " << e.what() << std::endl;
+        std::cerr << "Error in cListen: " << e.what() << std::endl;
     }
 }
 
+
+void Client::ClientFunction() {
+    while (true) {
+        std::cout << "Client listening for data..." << std::endl;
+        //listen();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
+    }
+}
+
+
+void Client::sendPlayerInput(const sf::Vector2f& direction) {
+    try {
+        json inputMsg;
+        inputMsg["type"] = "input";
+        inputMsg["direction"] = { direction.x, direction.y };
+        socket.send_to(asio::buffer(inputMsg.dump()), serverEndpoint);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error sending player input: " << e.what() << std::endl;
+    }
+}

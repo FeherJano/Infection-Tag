@@ -65,8 +65,11 @@ void WindowApp::startServer() {
 
     if (client->connect() != "") {
         //std::cout << "Local Client Connected as Host." << std::endl;
+
         std::thread([this]() {
-            client->waitForGameData();
+            client->cListen([this](const json& message) {
+                processIncomingMessage(message, *client->getPlayer());
+                });
             }).detach();
     }
     else {
@@ -74,19 +77,19 @@ void WindowApp::startServer() {
     }
 }
 
-
-
-
-
 bool WindowApp::startClient() {
     client = std::make_unique<Client>("localhost", 8085, ioContext);
     std::cout << "Starting Client " << std::endl;
 
     if (client->connect() != "") {
         std::cout << "Client Connected" << std::endl;
+
         std::thread([this]() {
-            client->waitForGameData(); // Játékadatok fogadása
+            client->cListen([this](const json& message) {
+                processIncomingMessage(message, *client->getPlayer());
+                });
             }).detach();
+
         return true;
     }
     std::cout << "Starting Client Failed " << std::endl;
@@ -96,35 +99,74 @@ bool WindowApp::startClient() {
 
 void WindowApp::processInput() {
     sf::Event event;
+    sf::Vector2f direction(0.0f, 0.0f);
+
     while (mainWindow->pollEvent(event)) {
+        // Ablak bezárása vagy kilépés ESC gombbal
         if (event.type == sf::Event::Closed || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {
             mainWindow->close();
             return;
         }
 
-        for (auto& element : uiElements) {
-            if (element && element->elementFunction(event)) {
-                std::cout << "UI Element triggered with ID: " << element->getId() << std::endl;
-                switch (element->getId()) {
-                case 1: startServer(); initializeLobby(); break;
-                case 2: if (startClient()) initializeClientLobby(); break; // Kliens lobby indítása
-                case 3: mainWindow->close(); break;
-                case 4:
-                    if (server) {
-                        server->generateGameData();
-                        server->broadcastGameData();
-                        initializeGame();
+        // Játékbeli mozgás érzékelése
+        if (currentState == AppState::GAME && event.type == sf::Event::KeyPressed) {
+            std::cout << "button event Id: " << event.key.code << std::endl;
+            if (event.key.code == sf::Keyboard::W) {
+                direction.y -= 1.0f;
+            }
+            if (event.key.code == sf::Keyboard::S) {
+                direction.y += 1.0f;
+            }
+            if (event.key.code == sf::Keyboard::A) {
+                direction.x -= 1.0f;
+            }
+            if (event.key.code == sf::Keyboard::D) {
+                direction.x += 1.0f;
+            }
+
+            if (client) {
+                client->sendPlayerInput(direction);
+                std::cout << "sent direction: " << direction.x << direction.y << std::endl;
+            }
+        }
+
+        // UI elemek kezelése
+        if (currentState != AppState::GAME) {
+            for (auto& element : uiElements) {
+                if (element && element->elementFunction(event)) {
+                    std::cout << "UI Element triggered with ID: " << element->getId() << std::endl;
+                    switch (element->getId()) {
+                    case 1: // Szerver indítása és lobby megnyitása
+                        startServer();
+                        initializeLobby();
+                        break;
+                    case 2: // Kliens csatlakozása és lobby megnyitása
+                        if (startClient()) {
+                            initializeClientLobby();
+                        }
+                        break;
+                    case 3: // Kilépés
+                        mainWindow->close();
+                        break;
+                    case 4: // Játék indítása
+                        if (server) {
+                            server->generateGameData();
+                            server->broadcastGameData();
+                            initializeGame();
+                        }
+                        break;
+                    case 5: // Visszatérés a főmenübe
+                        initializeMenu();
+                        break;
+                    default:
+                        break;
                     }
                     break;
-                case 5: initializeMenu(); break;
-                default: break;
                 }
-                break;
             }
         }
     }
 }
-
 
 
 void WindowApp::processGameData(const json& gameData, std::vector<std::vector<int>>& maze, std::vector<Survivor>& survivors, Killer& killer, std::vector<Task>& tasks, Player& clientPlayer) {
@@ -143,8 +185,6 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
 
         // Ha a gyilkos a kliens játékosa, állítsuk be a pozíciót
         if (killerData.contains("playerId")) {
-            std::cout << "Killer playerData: " << killerData["playerId"] << std::endl;
-            std::cout << "Client Id: " << client->getId() << std::endl;
             if (client->getId() == killerData["playerId"]) {
                 clientPlayer.setPosition(killerData["position"][0], killerData["position"][1]);
             }
@@ -155,7 +195,7 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
     if (gameData.contains("players") && gameData["players"].is_array()) {
         survivors.clear();
         for (const auto& playerData : gameData["players"]) {
-            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerData["playerId"]);
             survivor.from_json(playerData);
             survivors.push_back(survivor);
 
@@ -181,29 +221,67 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
     }
 }
 
-void WindowApp::renderGame(const json& gameData, Player& clientPlayer, bool showFullMap) {
-    std::vector<std::vector<int>> maze;
-    std::vector<Survivor> survivors;
-    Killer killer(0, 0, { sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown, sf::Keyboard::Unknown });
-    std::vector<Task> tasks;
+void WindowApp::processIncomingMessage(const json& message, Player& clientPlayer) {
+    if (message.contains("map")) {
+        auto compressedMap = message["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
+        auto decompressedMap = client->decompressMap(compressedMap);
+        // Térkép frissítése
+        maze = decompressedMap;
+    }
 
-    // Game data feldolgozása
-    processGameData(gameData, maze, survivors, killer, tasks, clientPlayer);
+    if (message.contains("players")) {
+        survivors.clear();
+        for (const auto& playerData : message["players"]) {
+            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerData["playerId"]);
+            survivor.from_json(playerData);
+            survivors.push_back(survivor);
+
+            if (playerData.contains("playerId"))
+            {
+                if (client->getId() == playerData["playerId"]) {
+                    clientPlayer.setPosition(playerData["position"][0], playerData["position"][1]);
+
+                }
+            }
+        }
+    }
+
+    if (message.contains("killer")) {
+        auto killerData = message["killer"];
+        killer.from_json(killerData);
+
+        if (killerData.contains("playerId")) {
+
+            if (client->getId() == killerData["playerId"]) {
+                clientPlayer.setPosition(killerData["position"][0], killerData["position"][1]);
+            }
+            else {
+                std::cout << "Client ID does not match killer playerId." << std::endl;
+            }
+        }
+        else {
+            std::cout << "Killer data does not contain playerId." << std::endl;
+        }
+    }
+
+}
+
+
+
+void WindowApp::renderGame(const json& gameData, Player& clientPlayer, bool showFullMap) {
+
+    if (!isInitialized) {
+        std::cout << "Running processGameData for initialization..." << std::endl;
+        processGameData(gameData, maze, survivors, killer, tasks, clientPlayer);
+        std::cout << "Initialization completed." << std::endl;
+        isInitialized = true;
+    }
 
     // Renderelés
     mainWindow->clear();
 
     // Térkép kirajzolása
     renderMap(*mainWindow, maze, clientPlayer, survivors, killer, showFullMap);
-
-    // Karakterek kirajzolása
-    for (const auto& survivor : survivors) {
-        survivor.render(*mainWindow);
-        std::cout << "Survivor Pos: " << survivor.position.x << "," << survivor.position.y << std::endl;
-        
-    }
-    killer.render(*mainWindow);
-    std::cout << "Killer Pos: " << killer.position.x << "," << killer.position.y << std::endl;
 
     // Feladatok kirajzolása
     for (const auto& task : tasks) {

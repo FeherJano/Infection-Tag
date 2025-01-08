@@ -14,11 +14,12 @@ namespace {
 Player::Player(float startX,
                float startY,
                float speed,
-               std::array<sf::Keyboard::Key, 4> movementKeys) :
+               std::array<sf::Keyboard::Key, 4> movementKeys, const std::string& id) :
     position(startX, startY),
     lastDirection(1.0f, 0.0f),
     moveSpeed(speed),
-    movementKeys(movementKeys)
+    movementKeys(movementKeys),
+    playerId(id)
 {}
 
 void Player::move(float deltaTime, const std::vector<std::vector<int>>& maze) {
@@ -60,6 +61,36 @@ void Player::move(float deltaTime, const std::vector<std::vector<int>>& maze) {
     }
 }
 
+void Player::moveWithDirection(const sf::Vector2f& direction, float deltaTime, const std::vector<std::vector<int>>& maze) {
+    float length = sqrt(direction.x * direction.x + direction.y * direction.y);
+    float dirX = 0.0f, dirY = 0.0f;
+
+    if (length > 0.0f) {
+        dirX = direction.x / length;
+        dirY = direction.y / length;
+    }
+
+    sf::Vector2f offset(dirX * moveSpeed * deltaTime, dirY * moveSpeed * deltaTime);
+
+    // Ellenőrizzük az X irányú mozgást
+    sf::Vector2f newXPos = position + sf::Vector2f(offset.x, 0);
+    if (!checkCollision(newXPos, CELL_SIZE, maze)) {
+        position.x += offset.x;
+    }
+
+    // Ellenőrizzük az Y irányú mozgást
+    sf::Vector2f newYPos = position + sf::Vector2f(0, offset.y);
+    if (!checkCollision(newYPos, CELL_SIZE, maze)) {
+        position.y += offset.y;
+    }
+
+    // Frissítjük az utolsó irányt
+    if (dirX != 0 || dirY != 0) {
+        lastDirection = sf::Vector2f(dirX, dirY);
+    }
+}
+
+
 void Player::update(float deltaTime) {
     if (hitCooldownTimer > 0) {
         hitCooldownTimer -= deltaTime;
@@ -85,8 +116,8 @@ void Player::from_json(const json& j) {
 
 Survivor::Survivor(float startX,
                    float startY,
-                   std::array<sf::Keyboard::Key, 4> movementKeys) :
-    Player(startX, startY, SURVIVOR_MOVE_SPEED, movementKeys),
+                   std::array<sf::Keyboard::Key, 4> movementKeys, const std::string& id) :
+    Player(startX, startY, SURVIVOR_MOVE_SPEED, movementKeys, id),
     healthState(HEALTHY)
 {}
 
@@ -212,8 +243,8 @@ void Survivor::render(sf::RenderWindow& window) const {
 
 Killer::Killer(float startX,
                float startY,
-               std::array<sf::Keyboard::Key, 4> movementKeys) :
-    Player(startX, startY, KILLER_MOVE_SPEED, movementKeys)
+               std::array<sf::Keyboard::Key, 4> movementKeys, const std::string& id) :
+    Player(startX, startY, KILLER_MOVE_SPEED, movementKeys, id)
 {}
 
 bool Killer::canHit() {
@@ -277,6 +308,7 @@ void checkCollisionBetweenSurvivors(std::vector<Survivor>& survivors) {
 
 json Survivor::to_json() const {
     return {
+        {"playerId", playerId}, // Biztosítsuk, hogy playerId hozzáadva legyen
         {"position", {position.x, position.y}},
         {"healthState", healthState},
         {"speedBoostTimer", speedBoostTimer},
@@ -285,9 +317,11 @@ json Survivor::to_json() const {
 }
 
 
+
 void Survivor::from_json(const json& j) {
-    position.x = j.at("position").at(0);
-    position.y = j.at("position").at(1);
+    playerId = j.at("playerId").get<std::string>();
+    position.x = j.at("position")[0];
+    position.y = j.at("position")[1];
     healthState = j.at("healthState");
     speedBoostTimer = j.at("speedBoostTimer");
     dyingTimer = j.at("dyingTimer");

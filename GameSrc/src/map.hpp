@@ -23,7 +23,7 @@ bool isCellVisible(sf::Vector2f playerPos, int gridX, int gridY, float viewRadiu
 bool isCellInKillerSight(const Player& killer, int gridX, int gridY, const std::vector<std::vector<int>>& maze);
 
 bool isCellVisibleWithObstacles(const sf::Vector2f& playerPos, int cellX, int cellY, int viewRadius, const std::vector<std::vector<int>>& maze);
-sf::Vector2f generateRandomPosition(const std::vector<std::vector<int>>& maze, int cellWidth, int cellHeight);
+sf::Vector2f generateRandomPosition(const std::vector<std::vector<int>>& maze, int cellWidth, int cellHeight, const std::vector<sf::Vector2f>& playerPositions);
 
 
 
