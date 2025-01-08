@@ -1,5 +1,4 @@
 #include "TextBox.hpp"
-#include "../../Utility/logging.hpp"
 
 //STATIC CLASS VARIABLES DEFINED HERE
 
@@ -16,16 +15,16 @@ TextBox::TextBox(const sf::RenderWindow& renderWindow, sf::Vector2f pos, sf::Vec
 	uiElement(&renderWindow, pos, size, id), body(sf::RectangleShape(size)), label(sf::Text()), font(new sf::Font()), inputText(), isActive(false)
 {
 	if (!font->loadFromFile("./src/Utility/Fonts/Raleway-Regular.ttf")) { // Use a valid path to a .ttf file
-		logErr(noSuitableFontException().what())
-			exit(err_Fatal);
+		std::cerr << "Failed to load font: Raleway-Regular.ttf"<<'\n';
+		exit(-1);
 	}
 	try {
 		label.setFont(*font);
 		label.setString(text);
 	}
 	catch (std::exception e) {
-		logErr(e.what());
-		exit(err_Fatal);
+		std::cerr<< e.what() << '\n';
+		exit(-1);
 	}
 
 	body.setPosition(pos);

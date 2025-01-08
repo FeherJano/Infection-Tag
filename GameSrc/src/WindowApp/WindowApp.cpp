@@ -13,6 +13,7 @@ WindowApp::~WindowApp() {
         mainWindow->close();
         delete mainWindow;
     }
+    reset();
 }
 
 void WindowApp::initializeMenu() {

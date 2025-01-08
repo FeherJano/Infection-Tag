@@ -1,7 +1,6 @@
 #pragma once
 #include "uiElement.hpp"
 
-
 class Button : public uiElement {
 private:
 	sf::RectangleShape body;

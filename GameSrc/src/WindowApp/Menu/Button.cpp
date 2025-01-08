@@ -2,9 +2,6 @@
 #include <iostream>
 
 const int err_Fatal = -1;
-void logErr(const std::string& errorMessage) {
-	std::cerr << "Error: " << errorMessage << std::endl;
-}
 
 //STATIC CLASS VARIABLES DEFINED HERE
 
@@ -21,7 +18,7 @@ Button::Button(const sf::RenderWindow& renderWindow, sf::Vector2f pos, sf::Vecto
 	uiElement(&renderWindow, pos, size, id), body(sf::RectangleShape(size)), label(sf::Text()), font(new sf::Font())
 {
 	if (!font->loadFromFile("./src/Utility/Fonts/Raleway-Regular.ttf")) {
-		logErr("Failed to load font: Raleway-Regular.ttf");
+		std::cerr<< "Failed to load font: Raleway-Regular.ttf"<<'\n';
 		exit(err_Fatal);
 	}
 
@@ -30,7 +27,7 @@ Button::Button(const sf::RenderWindow& renderWindow, sf::Vector2f pos, sf::Vecto
 		label.setString(text);
 	}
 	catch (std::exception e) {
-		logErr(e.what());
+		std::cerr << e.what() << '\n';
 		exit(err_Fatal);
 	}
 	
