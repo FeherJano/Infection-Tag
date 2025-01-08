@@ -17,6 +17,7 @@ using namespace std;
 class Client {
 public:
     Client(const std::string& serverAddress, uint16_t port, asio::io_context& ioContext);
+    ~Client();
     std::string connect();
 
     json getGameData() const { return gameData; }
@@ -31,7 +32,6 @@ public:
     void sendPlayerInput(const sf::Vector2f& direction);
     void cListen(std::function<void(const json&)> onDataReceived);
     void ClientFunction();
-
 
 private:
     json gameData;

@@ -1,6 +1,7 @@
 ﻿#include "WindowApp.hpp"
 #include <iostream>
 
+
 WindowApp::WindowApp(asio::io_context& ioContext, unsigned width, unsigned height)
     : ioContext(ioContext), width(width), height(height), mainWindow(nullptr), currentState(AppState::MENU) {
     mainWindow = new sf::RenderWindow(sf::VideoMode(width, height), "Multiplayer Game");
@@ -121,6 +122,10 @@ void WindowApp::processInput() {
                 client->sendPlayerInput(direction);
                 std::cout << "sent direction: " << direction.x << direction.y << std::endl;
             }
+            if (event.key.code == sf::Keyboard::Q) {
+                resetServer();
+                return;
+            }
         }
 
         // UI elemek kezelése
@@ -215,6 +220,14 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
 }
 
 void WindowApp::processIncomingMessage(const json& message, Player& clientPlayer) {
+    //If server sends reset message, we destroy the game and reset to lobby
+    if (message.contains("type") && message["type"] == "reset") {
+        currentState = AppState::MENU;
+        this->reset();
+        return;
+    }
+
+
     if (message.contains("map")) {
         auto compressedMap = message["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
         auto decompressedMap = client->decompressMap(compressedMap);
@@ -283,6 +296,37 @@ void WindowApp::renderGame(const json& gameData, Player& clientPlayer, bool show
     }
 
     mainWindow->display();
+}
+
+
+//Calls server's destructor which will broadcast a reset call to all clients.
+void WindowApp::resetServer() {
+    currentState = AppState::MENU;
+    std::this_thread::sleep_for(20ms);
+    if (server) {
+        //deleting server
+        server.reset();
+        server = nullptr;
+    }
+    std::cout << "Server shut down successfully!" << std::endl;
+}
+
+//Resets the entire game, and exits to menu, invoked by server's reset call.
+void WindowApp::reset() {
+    currentState = AppState::MENU;
+    std::this_thread::sleep_for(100ms);
+    if (client) {
+        client.reset();
+        client = nullptr;
+    }
+    uiElements.clear();
+    survivors.clear();
+    maze.clear();
+    tasks.clear();
+
+    initializeMenu();
+    std::cout << "Reset complete succesfully!" << std::endl;
+
 }
 
 void WindowApp::renderElements() {

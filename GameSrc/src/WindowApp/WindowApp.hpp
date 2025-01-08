@@ -61,10 +61,11 @@ private:
         std::vector<Task>& tasks,
         Player& clientPlayer);
 
-
-
     void startServer();
     bool startClient();
+    void reset();
+    void resetServer();
+
 };
 
 #endif

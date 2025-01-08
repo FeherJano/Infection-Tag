@@ -16,6 +16,13 @@ Client::Client(const std::string& serverAddress, uint16_t port, asio::io_context
     }
 }
 
+Client::~Client() {
+    player.reset();
+    player = nullptr;
+    socket.close();
+    gameData.clear();
+}
+
 
 std::string Client::connect() {
     try {
@@ -142,6 +149,12 @@ void Client::cListen(std::function<void(const json&)> onDataReceived) {
             else {
                 // Játékbeli frissítések fogadása
                 try {
+                    if (chunk == "EXIT") {
+                        json exitCall;
+                        exitCall["type"] = "reset";
+                        onDataReceived(exitCall);
+                        break;
+                    }
                     if (chunk == "END_OF_DATA") {
                         if (!fullData.empty()) {
                             json parsedData = json::parse(fullData);

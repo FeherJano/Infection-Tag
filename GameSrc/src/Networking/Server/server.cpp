@@ -3,8 +3,25 @@
 CatGameServer::CatGameServer(asio::io_context& ioContext, uint16_t port)
     : socket(ioContext, asio::ip::udp::endpoint(asio::ip::udp::v4(), port)), currentState(serverStateLobby) {
     std::cout << "Server initialized in lobby state." << std::endl;
+    playerCounter = 1;
 }
 
+CatGameServer::~CatGameServer() {
+    currentState = serverStateIdle;
+    int retries = 0;
+    while (!this->reset() && retries < 3) {
+        retries++;
+    }
+    std::this_thread::sleep_for(20ms);
+    survivors.clear();
+    maze.clear();
+    tasks.clear();
+    players.clear();
+    playersEndpoints.clear(); //just to make sure
+    socket.close();
+    playerCounter = 1;
+
+}
 
 void CatGameServer::setState(serverState newState) {
     currentState = newState;
@@ -21,6 +38,9 @@ void CatGameServer::ServerFunction() {
             setupGameState();
             currentState = serverStateGame; // Állapot frissítése a játék indítása után
         }
+        if (currentState == serverStateIdle) {
+            break;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Minimalis várakozás a CPU túlterhelése elkerülése érdekében
     }
 }
@@ -36,7 +56,7 @@ void CatGameServer::listen() {
 
             json request = json::parse(std::string(buffer, len));
             if (request["type"] == "connect") {
-                static int playerCounter = 1;
+                
                 std::string playerId = "Player" + std::to_string(playerCounter);
 
                 // Csak az első játékos (Player1) lehet Killer
@@ -263,3 +283,12 @@ std::string CatGameServer::getPlayerIdByEndpoint(const asio::ip::udp::endpoint& 
     throw std::runtime_error("Player not found for the given endpoint.");
 }
 
+bool CatGameServer::reset() {
+    std::string endOfMessage = "EXIT";
+    for (const auto& [playerId, endpoint] : playersEndpoints) {
+        socket.send_to(asio::buffer(endOfMessage), endpoint);        
+        std::this_thread::sleep_for(1ms);
+    }
+    return true;
+
+}

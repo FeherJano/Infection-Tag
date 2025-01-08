@@ -26,6 +26,7 @@ struct PlayerInfo {
 class CatGameServer {
 public:
     CatGameServer(asio::io_context& ioContext, uint16_t port);
+    ~CatGameServer();
     void ServerFunction();
     void setState(serverState newState);
     //void startGame();
@@ -37,6 +38,8 @@ public:
     std::unordered_map<std::string, std::string> playerRoles; // "Killer" vagy "Survivor"
     void processPlayerInput(const std::string& playerId, const sf::Vector2f& direction);
     std::string getPlayerIdByEndpoint(const asio::ip::udp::endpoint& endpoint);
+
+    bool reset();
 
 private:
     asio::ip::udp::socket socket;
@@ -52,6 +55,7 @@ private:
 
     void listen();
     void setupGameState();
+    int playerCounter;
     
 };
 
