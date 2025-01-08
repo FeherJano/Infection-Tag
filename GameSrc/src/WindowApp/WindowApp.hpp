@@ -11,6 +11,7 @@
 #include "../Player/player.hpp"
 #include "AppState.hpp"
 #include "Menu/Button.hpp"
+#include "Menu/TextBox.hpp"
 #include <mutex>
 
 enum class AppState {
@@ -31,7 +32,10 @@ private:
     unsigned width, height;
     AppState currentState;
 
-    std::vector<std::unique_ptr<Button>> uiElements;
+    sf::Texture menuBackgroundTex;
+    sf::Sprite menuBackground;
+
+    std::vector<std::unique_ptr<uiElement>> uiElements;
     asio::io_context& ioContext;
 
     std::unique_ptr<CatGameServer> server;

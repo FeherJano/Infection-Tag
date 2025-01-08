@@ -15,23 +15,30 @@ WindowApp::~WindowApp() {
 }
 
 void WindowApp::initializeMenu() {
+    if (!this->menuBackgroundTex.loadFromFile("./src/WindowApp/Textures/menu1.jpg")) {
+        std::cout << "ERROR::MENU::COULD NOT LOAD BACKGROUND TEXTURE" << "\n";
+    }
+    this->menuBackground.setTexture(this->menuBackgroundTex);
     uiElements.clear();
-    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 200), sf::Vector2f(200, 50), "Host", 1U));
-    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 300), sf::Vector2f(200, 50), "Join", 2U));
-    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 400), sf::Vector2f(200, 50), "Exit", 3U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 400), sf::Vector2f(200, 50), "Host", 1U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 500), sf::Vector2f(200, 50), "Join", 2U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 600), sf::Vector2f(200, 50), "Exit", 3U));
     currentState = AppState::MENU;
 }
 
 void WindowApp::initializeLobby() {
     uiElements.clear();
-    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 200), sf::Vector2f(200, 50), "Start Game", 4U));
-    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 300), sf::Vector2f(200, 50), "Back", 5U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 400), sf::Vector2f(200, 50), "Start Game", 4U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 500), sf::Vector2f(200, 50), "Back", 5U));
     currentState = AppState::LOBBY;
 }
 
 void WindowApp::initializeClientLobby() {
     uiElements.clear();
-    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 300), sf::Vector2f(200, 50), "Waiting for Server...", 6U));
+    uiElements.push_back(std::make_unique<TextBox>(*mainWindow, sf::Vector2f(300, 400), sf::Vector2f(200, 50), "Host Name", 6U));
+    uiElements.push_back(std::make_unique<TextBox>(*mainWindow, sf::Vector2f(300, 500), sf::Vector2f(200, 50), "IP Address", 7U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 600), sf::Vector2f(80, 50), "Back", 5U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(420, 600), sf::Vector2f(80, 50), "Join", 9U));
     currentState = AppState::LOBBY;
 }
 
@@ -209,6 +216,7 @@ void WindowApp::renderGame(const json& gameData, Player& clientPlayer, bool show
 
 void WindowApp::renderElements() {
     mainWindow->clear();
+    mainWindow->draw(this->menuBackground);
     for (const auto& element : uiElements) {
         element->renderElement(mainWindow);
     }

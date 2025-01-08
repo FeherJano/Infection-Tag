@@ -165,6 +165,7 @@
     <ClCompile Include="src\task.cpp" />
     <ClCompile Include="src\Utility\logging.cpp" />
     <ClCompile Include="src\WindowApp\Menu\Button.cpp" />
+    <ClCompile Include="src\WindowApp\Menu\TextBox.cpp" />
     <ClCompile Include="src\WindowApp\WindowApp.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -179,6 +180,7 @@
     <ClInclude Include="src\Utility\logging.hpp" />
     <ClInclude Include="src\WindowApp\AppState.hpp" />
     <ClInclude Include="src\WindowApp\Menu\Button.hpp" />
+    <ClInclude Include="src\WindowApp\Menu\TextBox.hpp" />
     <ClInclude Include="src\WindowApp\Menu\uiElement.hpp" />
     <ClInclude Include="src\WindowApp\WindowApp.hpp" />
   </ItemGroup>
