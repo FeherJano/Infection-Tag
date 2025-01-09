@@ -205,7 +205,7 @@ void CatGameServer::broadcastGameData() {
         try {
             std::string dataToSend = gameData.dump();
             std::cout << "Players: " << gameData["players"] << " Killer: " << gameData["killer"] << std::endl;
-            const size_t chunkSize = 1024; // Max buffer size
+            const size_t chunkSize = 8128; // Max buffer size
             size_t totalSize = dataToSend.size();
             size_t numChunks = (totalSize + chunkSize - 1) / chunkSize;
 

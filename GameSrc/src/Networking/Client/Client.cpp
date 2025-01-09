@@ -104,7 +104,7 @@ void Client::cListen(std::function<void(const json&)> onDataReceived) {
         bool initialDataProcessed = false;
 
         while (true) {
-            char buffer[1024];
+            char buffer[8128];
             asio::ip::udp::endpoint senderEndpoint;
             size_t len = socket.receive_from(asio::buffer(buffer), senderEndpoint);
 
@@ -140,6 +140,7 @@ void Client::cListen(std::function<void(const json&)> onDataReceived) {
                     }
                     catch (const std::exception& e) {
                         std::cerr << "Error parsing initial JSON data: " << e.what() << std::endl;
+                        fullData.clear();
                     }
                 }
                 else {
@@ -174,6 +175,7 @@ void Client::cListen(std::function<void(const json&)> onDataReceived) {
                 }
                 catch (const std::exception& e) {
                     std::cerr << "Error parsing update JSON data: " << e.what() << std::endl;
+                    fullData.clear();
                 }
             }
         }
