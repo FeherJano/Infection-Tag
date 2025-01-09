@@ -2,8 +2,8 @@
 #define GAME_CONSTANTS_HPP
 
 // Map dimensions
-const int WIDTH = 80;  // Map width
-const int HEIGHT = 80; // Map height
+const int WIDTH = 90;  // Map width
+const int HEIGHT = 90; // Map height
 const int CELL_SIZE = 10; // Cell size in the display
 const int GRID_ROWS = 3; // Number of blocks in rows
 const int GRID_COLS = 3; // Number of blocks in columns
