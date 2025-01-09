@@ -30,6 +30,7 @@ public:
     void ServerFunction();
     void setState(serverState newState);
     //void startGame();
+    void broadcastGameData(const json& customMessage);
     void broadcastGameData();
     void generateGameData();
     json gameData;
@@ -38,6 +39,7 @@ public:
     std::unordered_map<std::string, std::string> playerRoles; // "Killer" vagy "Survivor"
     void processPlayerInput(const std::string& playerId, const sf::Vector2f& direction);
     std::string getPlayerIdByEndpoint(const asio::ip::udp::endpoint& endpoint);
+    bool checkEndgameCondition();
 
     bool reset();
 
@@ -50,6 +52,8 @@ private:
     Killer killer;
     std::vector<std::vector<int>> maze;
     std::vector<Task> tasks;
+
+    std::chrono::steady_clock::time_point gameStartTime;
 
     std::vector<std::vector<std::pair<int, int>>> compressMap(const std::vector<std::vector<int>>& map);
 

@@ -50,6 +50,9 @@ private:
     std::vector<Task> tasks;
     std::set<sf::Keyboard::Key> inputState;
 
+    bool isEndgame = false;
+    std::string endgameMessage;
+
 
     bool isInitialized = false;
 
@@ -63,6 +66,7 @@ private:
 
     void processInput();
     void updateDirection();
+    void renderEndgameScreen();
     void renderElements();
     void renderGame(const json& gameData, Player& clientPlayer, bool showFullMap);
     void processIncomingMessage(const json& message, Player& clientPlayer); // JSON üzenet feldolgozása

@@ -107,6 +107,7 @@ void CatGameServer::listen() {
 
 
 void CatGameServer::setupGameState() {
+    gameStartTime = std::chrono::steady_clock::now();
     // Generáljuk az adatokat
     gameData["map"] = { {0, 0, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 1, 0} }; // Példa térkép
     gameData["tasks"] = { {"position", {2, 2}}, {"progress", 0} }; // Példa feladatok
@@ -198,6 +199,22 @@ void CatGameServer::generateGameData() {
     std::cout << "Game data generated:\n" << gameData.dump(4) << std::endl; // Debug: Ellenőrizzük a JSON szerkezetet
 }
 
+void CatGameServer::broadcastGameData(const json& customMessage) {
+    std::string dataToSend = customMessage.dump();
+
+    for (const auto& [playerId, endpoint] : playersEndpoints) {
+        try {
+            socket.send_to(asio::buffer(dataToSend), endpoint);
+            // Send end of data signal
+            std::string endSignal = "END_OF_DATA";
+            socket.send_to(asio::buffer(endSignal), endpoint);
+            std::cout << "Broadcasted message to player: " << playerId << std::endl;
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Failed to send game data to player " << playerId << ": " << e.what() << std::endl;
+        }
+    }
+}
 
 
 void CatGameServer::broadcastGameData() {
@@ -296,8 +313,35 @@ void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Ve
     // Frissítjük a Killer állapotát (sebesség visszaállítása)
     killer.update(deltaTime);
     gameData["killer"]["moveSpeed"] = killer.moveSpeed;
+
+    // Endgame feltétel ellenőrzése
+    if (checkEndgameCondition()) {
+        currentState = serverStateIdle;
+
+        auto now = std::chrono::steady_clock::now();
+        float gameTime = std::chrono::duration_cast<std::chrono::seconds>(now - gameStartTime).count();
+
+        std::thread([this, gameTime]() {
+            
+            json endgameMessage;
+            endgameMessage["type"] = "endgame";
+            endgameMessage["duration"] = gameTime;
+
+            broadcastGameData(endgameMessage);
+
+            std::cout << "Game over! Duration: " << gameTime << " seconds." << std::endl;
+            }).detach();
+    }
 }
 
+bool CatGameServer::checkEndgameCondition() {
+    for (const auto& survivor : survivors) {
+        if (survivor.healthState != DYING && survivor.healthState != DEAD) {
+            return false; // Van még életben Survivor
+        }
+    }
+    return true; // Minden Survivor DYING vagy DEAD
+}
 
 
 std::string CatGameServer::getPlayerIdByEndpoint(const asio::ip::udp::endpoint& endpoint) {
