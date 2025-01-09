@@ -113,18 +113,18 @@ void WindowApp::processInput() {
         // Játékbeli mozgás érzékelése
         if (currentState == AppState::GAME && event.type == sf::Event::KeyPressed) {
             std::cout << "button event Id: " << event.key.code << std::endl;
-            if (event.key.code == sf::Keyboard::W) {
+                if (event.key.code == sf::Keyboard::W) {
                 direction.y -= 1.0f;
-            }
-            if (event.key.code == sf::Keyboard::S) {
+                }
+                if (event.key.code == sf::Keyboard::S) {
                 direction.y += 1.0f;
-            }
-            if (event.key.code == sf::Keyboard::A) {
+                }
+                if (event.key.code == sf::Keyboard::A) {
                 direction.x -= 1.0f;
-            }
-            if (event.key.code == sf::Keyboard::D) {
+                }
+                if (event.key.code == sf::Keyboard::D) {
                 direction.x += 1.0f;
-            }
+                }
 
             if (client) {
                 client->sendPlayerInput(direction);
@@ -201,7 +201,7 @@ void WindowApp::processGameData(const json& gameData, std::vector<std::vector<in
     if (gameData.contains("players") && gameData["players"].is_array()) {
         survivors.clear();
         for (const auto& playerData : gameData["players"]) {
-            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerData["playerId"]);
+            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
             survivor.from_json(playerData);
             survivors.push_back(survivor);
 
@@ -246,7 +246,7 @@ void WindowApp::processIncomingMessage(const json& message, Player& clientPlayer
     if (message.contains("players")) {
         survivors.clear();
         for (const auto& playerData : message["players"]) {
-            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerData["playerId"]);
+            Survivor survivor(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
             survivor.from_json(playerData);
             survivors.push_back(survivor);
 

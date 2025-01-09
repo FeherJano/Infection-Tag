@@ -88,8 +88,6 @@ void CatGameServer::listen() {
                 sf::Vector2f direction(request["direction"][0], request["direction"][1]);
                 processPlayerInput(playerId, direction);
 
-                gameData["killer"] = killer.to_json();
-                gameData["killer"]["playerId"] = playerId;
 
                 broadcastGameData();
             }
@@ -167,13 +165,15 @@ void CatGameServer::generateGameData() {
     sf::Vector2f killerPos = generateRandomPosition(maze, 1, 1,playerPositions);
     playerPositions.push_back(killerPos);
 
+    killer = Killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
     killer.position = killerPos;
     auto killerData = killer.to_json();
     killerData["playerId"] = ""; // Gyilkos azonosítója (alapértelmezés)
     for (const auto& [playerId, role] : playerRoles) {
         if (role == "Killer") {
             killerData["playerId"] = playerId; // Gyilkoshoz rendeljük az azonosítót
-            killer = Killer(0, 0, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerId);
+             
+            killer.playerId = playerId;
             break;
         }
     }
@@ -185,7 +185,8 @@ void CatGameServer::generateGameData() {
         if (role == "Survivor") {
             sf::Vector2f survivorPos = generateRandomPosition(maze, 1, 1, playerPositions);
             playerPositions.push_back(survivorPos);
-            Survivor survivor(survivorPos.x, survivorPos.y, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D }, playerId);
+            Survivor survivor(survivorPos.x, survivorPos.y, { sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D });
+            survivor.playerId = playerId;
             survivors.push_back(survivor);
 
             auto survivorData = survivor.to_json();
@@ -203,6 +204,7 @@ void CatGameServer::broadcastGameData() {
     for (const auto& [playerId, endpoint] : playersEndpoints) {
         try {
             std::string dataToSend = gameData.dump();
+            std::cout << "Players: " << gameData["players"] << " Killer: " << gameData["killer"] << std::endl;
             const size_t chunkSize = 1024; // Max buffer size
             size_t totalSize = dataToSend.size();
             size_t numChunks = (totalSize + chunkSize - 1) / chunkSize;
@@ -239,10 +241,7 @@ void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Ve
         std::cout << "Player is a Survivor." << std::endl;
         // Survivors között keresés
         for (auto& survivor : survivors) {
-            auto survivorData = survivor.to_json();
-            std::cout << "Checking survivor with playerId: " << survivorData["playerId"] << std::endl;
-
-            if (survivorData["playerId"] == playerId) {
+            if (survivor.playerId == playerId) {
                 // Mozgatás az irányvektor alapján
                 survivor.moveWithDirection(direction, deltaTime, maze);
 

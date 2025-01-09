@@ -42,18 +42,18 @@ std::string Client::connect() {
 
         if (response["type"] == "connected") {
             //std::string playerId = response["playerId"];
-            std::string playerId = response["playerId"];
+            playerId = response["playerId"];
             setId(playerId);
             if (response.contains("role") && !response["role"].is_null()) {
                 std::string role = response["role"];
 
                 if (role == "Killer") {
                     // Killer objektum létrehozása
-                    player = std::make_unique<Killer>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D}, playerId);
+                    player = std::make_unique<Killer>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D});
                 }
                 else if (role == "Survivor") {
                     // Survivor objektum létrehozása
-                    player = std::make_unique<Survivor>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D}, playerId);
+                    player = std::make_unique<Survivor>(0, 0, std::array<sf::Keyboard::Key, 4>{sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D});
                 }
                 else {
                     std::cerr << "Unknown role received: " << role << std::endl;

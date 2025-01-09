@@ -45,6 +45,8 @@ private:
     Killer killer;
     std::vector<std::vector<int>> maze;
     std::vector<Task> tasks;
+    sf::Vector2f currentDirection = { 0.0f, 0.0f };
+
 
     bool isInitialized = false;
 
