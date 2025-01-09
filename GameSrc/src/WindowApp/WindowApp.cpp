@@ -415,7 +415,7 @@ int WindowApp::main() {
 
         if (isEndgame) {
             renderEndgameScreen();
-            break;
+            
         }
 
         if (currentState == AppState::LOBBY && client && client->isGameDataReady()) {
