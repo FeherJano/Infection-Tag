@@ -101,6 +101,17 @@ bool WindowApp::startClient() {
 void WindowApp::updateDirection() {
     sf::Vector2f direction(0.0f, 0.0f);
 
+    // Eltávolítjuk azokat a gombokat, amelyek már nincsenek lenyomva
+    for (auto it = inputState.begin(); it != inputState.end();) {
+        if (!sf::Keyboard::isKeyPressed(*it)) {
+            std::cout << "Removing key from inputState: " << *it << std::endl;
+            it = inputState.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
     // Az inputState alapján számoljuk az irányt
     if (inputState.count(sf::Keyboard::W)) direction.y -= 1.0f;
     if (inputState.count(sf::Keyboard::S)) direction.y += 1.0f;
@@ -140,16 +151,7 @@ void WindowApp::processInput() {
                 inputState.insert(event.key.code);
             }
 
-            // Eltávolítjuk azokat a gombokat, amelyek már nincsenek lenyomva
-            for (auto it = inputState.begin(); it != inputState.end();) {
-                if (!sf::Keyboard::isKeyPressed(*it)) {
-                    std::cout << "Removing key from inputState: " << *it << std::endl;
-                    it = inputState.erase(it);
-                }
-                else {
-                    ++it;
-                }
-            }
+            
 
             if (event.key.code == sf::Keyboard::Q) {
                 resetServer();
@@ -388,6 +390,7 @@ int WindowApp::main() {
                 if (inputState.size() > 0) {
                     updateDirection(); // Aktuális irány frissítése
                 }
+
                 
 
                 // Karakter mozgás frissítése deltaTime alapján
