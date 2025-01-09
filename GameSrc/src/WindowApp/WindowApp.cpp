@@ -104,7 +104,7 @@ void WindowApp::updateDirection() {
     // Eltávolítjuk azokat a gombokat, amelyek már nincsenek lenyomva
     for (auto it = inputState.begin(); it != inputState.end();) {
         if (!sf::Keyboard::isKeyPressed(*it)) {
-            std::cout << "Removing key from inputState: " << *it << std::endl;
+           // std::cout << "Removing key from inputState: " << *it << std::endl;
             it = inputState.erase(it);
         }
         else {
@@ -127,7 +127,7 @@ void WindowApp::updateDirection() {
     // Küldjük el a szervernek az irányt
     if (client) {
         client->sendPlayerInput(direction);
-        std::cout << "sent direction: " << direction.x << ", " << direction.y << std::endl;
+        //std::cout << "sent direction: " << direction.x << ", " << direction.y << std::endl;
     }
 }
 
@@ -145,7 +145,7 @@ void WindowApp::processInput() {
         
         // Játékbeli mozgás érzékelése
         if (currentState == AppState::GAME && event.type == sf::Event::KeyPressed) {
-            std::cout << "button event Id: " << event.key.code << std::endl;
+            //std::cout << "button event Id: " << event.key.code << std::endl;
 
             if (event.type == sf::Event::KeyPressed) {
                 inputState.insert(event.key.code);
@@ -162,7 +162,7 @@ void WindowApp::processInput() {
         if (currentState != AppState::GAME) {
             for (auto& element : uiElements) {
                 if (element && element->elementFunction(event)) {
-                    std::cout << "UI Element triggered with ID: " << element->getId() << std::endl;
+                    //std::cout << "UI Element triggered with ID: " << element->getId() << std::endl;
                     switch (element->getId()) {
                     case 1: // Szerver indítása és lobby megnyitása
                         startServer();
@@ -292,11 +292,11 @@ void WindowApp::processIncomingMessage(const json& message, Player& clientPlayer
                 clientPlayer.setPosition(killerData["position"][0], killerData["position"][1]);
             }
             else {
-                std::cout << "Client ID does not match killer playerId." << std::endl;
+                //std::cout << "Client ID does not match killer playerId." << std::endl;
             }
         }
         else {
-            std::cout << "Killer data does not contain playerId." << std::endl;
+            //std::cout << "Killer data does not contain playerId." << std::endl;
         }
     }
 
