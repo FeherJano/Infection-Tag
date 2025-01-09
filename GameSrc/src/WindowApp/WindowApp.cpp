@@ -257,6 +257,16 @@ void WindowApp::processIncomingMessage(const json& message, Player& clientPlayer
         return;
     }
 
+    if (message.contains("type") && message["type"] == "endgame") {
+        isEndgame = true;
+
+        float gameTime = message["duration"];
+        endgameMessage = "Game Over\nMice survived for " + std::to_string(static_cast<int>(gameTime)) + " seconds.";
+
+        std::cout << "Game over message processed. Duration: " << gameTime << " seconds." << std::endl;
+        return;
+    }
+
 
     if (message.contains("map")) {
         auto compressedMap = message["map"].get<std::vector<std::vector<std::pair<int, int>>>>();
@@ -368,6 +378,31 @@ void WindowApp::renderElements() {
     mainWindow->display();
 }
 
+void WindowApp::renderEndgameScreen() {
+    sf::Text endgameText;
+    sf::Font font;
+
+    if (!font.loadFromFile("./src/Utility/Fonts/Raleway-Regular.ttf")) {
+        std::cerr << "Failed to load font: Raleway-Regular.ttf" << '\n';
+        exit(-1);
+    }
+
+    endgameText.setFont(font);
+    endgameText.setString(endgameMessage);
+    endgameText.setCharacterSize(50);
+    endgameText.setFillColor(sf::Color::White);
+    endgameText.setOutlineThickness(2);
+    endgameText.setOutlineColor(sf::Color::Black);
+    endgameText.setStyle(sf::Text::Bold);
+
+    sf::FloatRect textBounds = endgameText.getLocalBounds();
+    endgameText.setPosition((width - textBounds.width) / 2, (height - textBounds.height) / 2);
+
+    mainWindow->clear();
+    mainWindow->draw(endgameText);
+    mainWindow->display();
+    
+}
 
 
 int WindowApp::main() {
@@ -377,6 +412,11 @@ int WindowApp::main() {
         processInput(); // Események kezelése
 
         float deltaTime = clock.restart().asSeconds(); // DeltaTime kiszámítása
+
+        if (isEndgame) {
+            renderEndgameScreen();
+            break;
+        }
 
         if (currentState == AppState::LOBBY && client && client->isGameDataReady()) {
             initializeGame(); // Átváltunk GAME állapotra
