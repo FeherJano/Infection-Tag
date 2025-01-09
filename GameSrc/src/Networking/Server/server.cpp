@@ -239,17 +239,16 @@ void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Ve
 
     if (playerRoles[playerId] == "Survivor") {
         std::cout << "Player is a Survivor." << std::endl;
-        // Survivors között keresés
+
         for (auto& survivor : survivors) {
             if (survivor.playerId == playerId) {
-                // Mozgatás az irányvektor alapján
                 survivor.moveWithDirection(direction, deltaTime, maze);
 
-                // Frissítsük a gameData-ban a survivor pozícióját
+                // Frissítsük a gameData-ban a Survivor pozícióját
                 for (auto& playerData : gameData["players"]) {
                     if (playerData["playerId"] == playerId) {
                         playerData["position"] = { survivor.getPosition().x, survivor.getPosition().y };
-                        std::cout << "Updated Survivor position: " << survivor.getPosition().x << ", " << survivor.getPosition().y << std::endl;
+                        playerData["healthState"] = survivor.healthState;
                         break;
                     }
                 }
@@ -259,18 +258,46 @@ void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Ve
     }
     else if (playerRoles[playerId] == "Killer") {
         std::cout << "Player is a Killer." << std::endl;
-        // Killer mozgatása
+
         killer.moveWithDirection(direction, deltaTime, maze);
 
-        // Frissítsük a gameData-ban a killer pozícióját
+        // Frissítsük a Killer pozícióját és sebességét
         gameData["killer"]["position"] = { killer.getPosition().x, killer.getPosition().y };
+        gameData["killer"]["moveSpeed"] = killer.moveSpeed;
 
         std::cerr << "Killer position: " << killer.getPosition().x << ", " << killer.getPosition().y << std::endl;
     }
-    else {
-        std::cout << "Unknown role for playerId: " << playerId << std::endl;
+
+    // Ellenőrizzük az ütközéseket a Survivorok és a Killer között
+    for (auto& survivor : survivors) {
+        if (checkCollisionForKiller(killer, survivor)) {
+            if (killer.canHit()) {
+                killer.hit(survivor); // Survivor kap találatot, Killer sebessége csökken
+                std::cout << "Killer hit Survivor: " << survivor.playerId << std::endl;
+            }
+        }
     }
+
+    // Survivor-Survivor ütközés ellenőrzése gyógyításhoz
+    checkCollisionBetweenSurvivors(survivors);
+
+    // Frissítjük a Survivorok állapotát (sebesség boost kezelés)
+    for (auto& survivor : survivors) {
+        survivor.update(deltaTime);
+        for (auto& playerData : gameData["players"]) {
+            if (playerData["playerId"] == survivor.playerId) {
+                playerData["healthState"] = survivor.healthState;
+                playerData["position"] = { survivor.getPosition().x, survivor.getPosition().y };
+                break;
+            }
+        }
+    }
+
+    // Frissítjük a Killer állapotát (sebesség visszaállítása)
+    killer.update(deltaTime);
+    gameData["killer"]["moveSpeed"] = killer.moveSpeed;
 }
+
 
 
 std::string CatGameServer::getPlayerIdByEndpoint(const asio::ip::udp::endpoint& endpoint) {

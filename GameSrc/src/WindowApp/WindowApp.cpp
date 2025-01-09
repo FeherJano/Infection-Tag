@@ -151,7 +151,6 @@ void WindowApp::processInput() {
                 inputState.insert(event.key.code);
             }
 
-            
 
             if (event.key.code == sf::Keyboard::Q) {
                 resetServer();
