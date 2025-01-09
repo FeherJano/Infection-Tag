@@ -139,8 +139,16 @@ void WindowApp::processInput() {
             if (event.type == sf::Event::KeyPressed) {
                 inputState.insert(event.key.code);
             }
-            if (event.type == sf::Event::KeyReleased) {
-                inputState.erase(event.key.code);
+
+            // Eltávolítjuk azokat a gombokat, amelyek már nincsenek lenyomva
+            for (auto it = inputState.begin(); it != inputState.end();) {
+                if (!sf::Keyboard::isKeyPressed(*it)) {
+                    std::cout << "Removing key from inputState: " << *it << std::endl;
+                    it = inputState.erase(it);
+                }
+                else {
+                    ++it;
+                }
             }
 
             if (event.key.code == sf::Keyboard::Q) {
