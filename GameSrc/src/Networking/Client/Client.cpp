@@ -161,7 +161,7 @@ void Client::cListen(std::function<void(const json&)> onDataReceived) {
                             json parsedData = json::parse(fullData);
 
                             // Debug: Ellenőrzés az érkező adatról
-                            std::cout << "Received update: " << fullData.size() << " bytes" << std::endl;
+                          //  std::cout << "Received update: " << fullData.size() << " bytes" << std::endl;
 
                             // Továbbítjuk az adatokat
                             onDataReceived(parsedData);
@@ -202,6 +202,7 @@ void Client::sendPlayerInput(const sf::Vector2f& direction) {
         inputMsg["type"] = "input";
         inputMsg["direction"] = { direction.x, direction.y };
         socket.send_to(asio::buffer(inputMsg.dump()), serverEndpoint);
+        std::this_thread::sleep_for(10ms);
     }
     catch (const std::exception& e) {
         std::cerr << "Error sending player input: " << e.what() << std::endl;
