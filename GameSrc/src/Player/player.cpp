@@ -62,11 +62,11 @@ void Player::move(float deltaTime, const std::vector<std::vector<int>>& maze) {
 
 void Player::moveWithDirection(const sf::Vector2f& direction, float deltaTime, const std::vector<std::vector<int>>& maze) {
     float length = sqrt(direction.x * direction.x + direction.y * direction.y);
-    float dirX = 0.0f, dirY = 0.0f;
+    float dirX = direction.x, dirY = direction.y;
 
-    if (length > 0.0f) {
-        dirX = direction.x / length;
-        dirY = direction.y / length;
+    if (length != 0) {
+        dirX /= length;
+        dirY /= length;
     }
 
     sf::Vector2f offset(dirX * moveSpeed * deltaTime, dirY * moveSpeed * deltaTime);

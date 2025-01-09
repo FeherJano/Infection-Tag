@@ -13,6 +13,7 @@
 #include "Menu/Button.hpp"
 #include "Menu/TextBox.hpp"
 #include <mutex>
+#include <set>
 
 enum class AppState {
     MENU,
@@ -45,7 +46,7 @@ private:
     Killer killer;
     std::vector<std::vector<int>> maze;
     std::vector<Task> tasks;
-    sf::Vector2f currentDirection = { 0.0f, 0.0f };
+    std::set<sf::Keyboard::Key> inputState;
 
 
     bool isInitialized = false;
@@ -56,6 +57,7 @@ private:
     void initializeGame();
 
     void processInput();
+    void updateDirection();
     void renderElements();
     void renderGame(const json& gameData, Player& clientPlayer, bool showFullMap);
     void processIncomingMessage(const json& message, Player& clientPlayer); // JSON üzenet feldolgozása

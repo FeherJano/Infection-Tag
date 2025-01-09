@@ -98,6 +98,28 @@ bool WindowApp::startClient() {
     return false;
 }
 
+void WindowApp::updateDirection() {
+    sf::Vector2f direction(0.0f, 0.0f);
+
+    // Az inputState alapján számoljuk az irányt
+    if (inputState.count(sf::Keyboard::W)) direction.y -= 1.0f;
+    if (inputState.count(sf::Keyboard::S)) direction.y += 1.0f;
+    if (inputState.count(sf::Keyboard::A)) direction.x -= 1.0f;
+    if (inputState.count(sf::Keyboard::D)) direction.x += 1.0f;
+
+    float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+    if (length != 0) {
+        direction.x /= length;
+        direction.y /= length;
+    }
+
+    // Küldjük el a szervernek az irányt
+    if (client) {
+        client->sendPlayerInput(direction);
+        std::cout << "sent direction: " << direction.x << ", " << direction.y << std::endl;
+    }
+}
+
 
 void WindowApp::processInput() {
     sf::Event event;
@@ -109,27 +131,18 @@ void WindowApp::processInput() {
             mainWindow->close();
             return;
         }
-
+        
         // Játékbeli mozgás érzékelése
         if (currentState == AppState::GAME && event.type == sf::Event::KeyPressed) {
             std::cout << "button event Id: " << event.key.code << std::endl;
-                if (event.key.code == sf::Keyboard::W) {
-                direction.y -= 1.0f;
-                }
-                if (event.key.code == sf::Keyboard::S) {
-                direction.y += 1.0f;
-                }
-                if (event.key.code == sf::Keyboard::A) {
-                direction.x -= 1.0f;
-                }
-                if (event.key.code == sf::Keyboard::D) {
-                direction.x += 1.0f;
-                }
 
-            if (client) {
-                client->sendPlayerInput(direction);
-                std::cout << "sent direction: " << direction.x << direction.y << std::endl;
+            if (event.type == sf::Event::KeyPressed) {
+                inputState.insert(event.key.code);
             }
+            if (event.type == sf::Event::KeyReleased) {
+                inputState.erase(event.key.code);
+            }
+
             if (event.key.code == sf::Keyboard::Q) {
                 resetServer();
                 return;
@@ -349,15 +362,29 @@ void WindowApp::renderElements() {
 
 
 int WindowApp::main() {
+    sf::Clock clock; // Időmérés a deltaTime-hoz
+
     while (mainWindow->isOpen()) {
-        processInput();
+        processInput(); // Események kezelése
+
+        float deltaTime = clock.restart().asSeconds(); // DeltaTime kiszámítása
 
         if (currentState == AppState::LOBBY && client && client->isGameDataReady()) {
             initializeGame(); // Átváltunk GAME állapotra
         }
 
         if (currentState == AppState::GAME) {
+            sf::Event event{};
             if (client) {
+
+                if (inputState.size() > 0) {
+                    updateDirection(); // Aktuális irány frissítése
+                }
+                
+
+                // Karakter mozgás frissítése deltaTime alapján
+                //client->getPlayer()->move(deltaTime, maze);
+
                 renderGame(client->getGameData(), *client->getPlayer(), false);
             }
             else if (server) {
