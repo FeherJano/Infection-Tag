@@ -41,6 +41,9 @@ public:
 
     }
 
+    virtual std::string getText() const{
+        return "";
+    }
 
     static bool isMouseThere(const sf::Vector2i& mousePos, const sf::Vector2f& topLeft, const sf::Vector2f& bottomRight) {
         return mousePos.x >= topLeft.x && mousePos.x <= bottomRight.x &&

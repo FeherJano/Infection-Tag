@@ -16,9 +16,9 @@ public:
 
 	int elementFunction(const sf::Event& e)override;
 	void renderElement(sf::RenderWindow* window)const override;
+	std::string getText() const override;
 
 	void processTyping(const sf::Event& e);
-	std::string getText() const;
 
 	static const float defaultBoxWidth;
 	static const sf::Color baseColor;

@@ -35,15 +35,39 @@ void WindowApp::initializeLobby() {
     currentState = AppState::LOBBY;
 }
 
+void WindowApp::initializeConnectionState() {
+    uiElements.clear();
+    uiElements.push_back(std::make_unique<TextBox>(*mainWindow, sf::Vector2f(300, 500), sf::Vector2f(200, 50), "IP Address", 6U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 600), sf::Vector2f(80, 50), "Back", 5U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(420, 600), sf::Vector2f(80, 50), "Join", 7U));
+    currentState = AppState::CONNECT;
+}
+
 void WindowApp::initializeClientLobby() {
     uiElements.clear();
-    uiElements.push_back(std::make_unique<TextBox>(*mainWindow, sf::Vector2f(300, 400), sf::Vector2f(200, 50), "Host Name", 6U));
-    uiElements.push_back(std::make_unique<TextBox>(*mainWindow, sf::Vector2f(300, 500), sf::Vector2f(200, 50), "IP Address", 7U));
-    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 600), sf::Vector2f(80, 50), "Back", 5U));
-    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(420, 600), sf::Vector2f(80, 50), "Join", 9U));
+    uiElements.push_back(std::make_unique<Button>(*mainWindow, sf::Vector2f(300, 400), sf::Vector2f(200, 50), "Waiting...", 9U));
     currentState = AppState::LOBBY;
 }
 
+
+void WindowApp::intitalizeCatWin() {
+    uiElements.clear();
+    if (!this->menuBackgroundTex.loadFromFile("./src/WindowApp/Textures/catWin.jpg")) {
+        std::cout << "ERROR::MENU::COULD NOT LOAD BACKGROUND TEXTURE" << "\n";
+    }
+    this->menuBackground.setTexture(this->menuBackgroundTex);
+    currentState = AppState::END;
+}
+
+
+void WindowApp::initializeRatWin() {
+    uiElements.clear();
+    if (!this->menuBackgroundTex.loadFromFile("./src/WindowApp/Textures/ratWin.jpg")) {
+        std::cout << "ERROR::MENU::COULD NOT LOAD BACKGROUND TEXTURE" << "\n";
+    }
+    this->menuBackground.setTexture(this->menuBackgroundTex);
+    currentState = AppState::END;
+}
 
 void WindowApp::initializeGame() {
     uiElements.clear();
@@ -79,8 +103,8 @@ void WindowApp::startServer() {
     }
 }
 
-bool WindowApp::startClient() {
-    client = std::make_unique<Client>("localhost", 8085, ioContext);
+bool WindowApp::startClient(std::string address) {
+    client = std::make_unique<Client>(address, 8085, ioContext);
     std::cout << "Starting Client " << std::endl;
 
     if (client->connect() != "") {
@@ -135,6 +159,7 @@ void WindowApp::updateDirection() {
 void WindowApp::processInput() {
     sf::Event event;
     sf::Vector2f direction(0.0f, 0.0f);
+    std::string address;
 
     while (mainWindow->pollEvent(event)) {
         // Ablak bezárása vagy kilépés ESC gombbal
@@ -168,10 +193,8 @@ void WindowApp::processInput() {
                         startServer();
                         initializeLobby();
                         break;
-                    case 2: // Kliens csatlakozása és lobby megnyitása
-                        if (startClient()) {
-                            initializeClientLobby();
-                        }
+                    case 2: // Csatlakozási adatok megadása
+                        initializeConnectionState();
                         break;
                     case 3: // Kilépés
                         mainWindow->close();
@@ -185,6 +208,14 @@ void WindowApp::processInput() {
                         break;
                     case 5: // Visszatérés a főmenübe
                         initializeMenu();
+                        break;
+                    case 6:
+                        address = element->getText();
+                        break;
+                    case 7: // Kliens csatlakozása és lobby megnyitása
+                        if (startClient(address)) {
+                            initializeClientLobby();
+                        }
                         break;
                     default:
                         break;

@@ -18,7 +18,9 @@
 enum class AppState {
     MENU,
     GAME,
-    LOBBY
+    CONNECT,
+    LOBBY,
+    END
 };
 
 class WindowApp {
@@ -53,8 +55,11 @@ private:
 
     void initializeMenu();
     void initializeLobby();
+    void initializeConnectionState();
     void initializeClientLobby();
     void initializeGame();
+    void intitalizeCatWin();
+    void initializeRatWin();
 
     void processInput();
     void updateDirection();
@@ -70,7 +75,7 @@ private:
         Player& clientPlayer);
 
     void startServer();
-    bool startClient();
+    bool startClient(std::string address);
     void reset();
     void resetServer();
 
