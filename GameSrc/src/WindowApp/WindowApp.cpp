@@ -12,6 +12,7 @@ WindowApp::~WindowApp() {
     if (mainWindow) {
         mainWindow->close();
         delete mainWindow;
+        mainWindow = nullptr;
     }
     reset();
 }
@@ -57,6 +58,10 @@ void WindowApp::intitalizeCatWin() {
     }
     this->menuBackground.setTexture(this->menuBackgroundTex);
     currentState = AppState::END;
+    mainWindow->clear();
+    mainWindow->draw(this->menuBackground);
+    mainWindow->display();
+
 }
 
 
@@ -98,7 +103,7 @@ void WindowApp::startServer() {
                 });
             }).detach();
     }
-    else {
+    else { 
         std::cerr << "Failed to connect local Client for Host." << std::endl;
     }
 }
@@ -159,7 +164,7 @@ void WindowApp::updateDirection() {
 void WindowApp::processInput() {
     sf::Event event;
     sf::Vector2f direction(0.0f, 0.0f);
-    std::string address;
+    
 
     while (mainWindow->pollEvent(event)) {
         // Ablak bezárása vagy kilépés ESC gombbal
@@ -180,6 +185,14 @@ void WindowApp::processInput() {
             if (event.key.code == sf::Keyboard::Q) {
                 resetServer();
                 return;
+            }
+        }
+
+        if (currentState == AppState::END) {
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
+                server ? resetServer() : reset();
+                isEndgame = false;
+                currentState = AppState::MENU;
             }
         }
 
@@ -445,7 +458,7 @@ int WindowApp::main() {
         float deltaTime = clock.restart().asSeconds(); // DeltaTime kiszámítása
 
         if (isEndgame) {
-            renderEndgameScreen();
+            intitalizeCatWin();
             
         }
 

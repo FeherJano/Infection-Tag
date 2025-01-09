@@ -23,13 +23,14 @@ enum class AppState {
     END
 };
 
+
 class WindowApp {
 public:
     WindowApp(asio::io_context& ioContext, unsigned width, unsigned height);
     ~WindowApp();
 
     int main();
-
+    std::string address = "";
 private:
     sf::RenderWindow* mainWindow;
     unsigned width, height;

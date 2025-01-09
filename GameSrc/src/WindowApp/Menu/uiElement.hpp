@@ -42,6 +42,7 @@ public:
     }
 
     virtual std::string getText() const{
+        std::cout << "Faszom";
         return "";
     }
 
