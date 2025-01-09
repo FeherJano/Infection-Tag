@@ -217,7 +217,7 @@ void CatGameServer::broadcastGameData() {
                 socket.send_to(asio::buffer(chunk), endpoint);
 
                 // Log the sent chunk
-                std::cout << "Sent chunk " << (i + 1) << "/" << numChunks << " to " << playerId << std::endl;
+               // std::cout << "Sent chunk " << (i + 1) << "/" << numChunks << " to " << playerId << std::endl;
             }
 
             // Send end of data signal
@@ -235,10 +235,10 @@ void CatGameServer::broadcastGameData() {
 void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Vector2f& direction) {
     const float deltaTime = 0.016f; // Példa időköz (60 FPS esetén ~16 ms)
 
-    std::cout << "Processing input for playerId: " << playerId << std::endl;
+   // std::cout << "Processing input for playerId: " << playerId << std::endl;
 
     if (playerRoles[playerId] == "Survivor") {
-        std::cout << "Player is a Survivor." << std::endl;
+      //  std::cout << "Player is a Survivor." << std::endl;
 
         for (auto& survivor : survivors) {
             if (survivor.playerId == playerId) {
@@ -257,7 +257,7 @@ void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Ve
         }
     }
     else if (playerRoles[playerId] == "Killer") {
-        std::cout << "Player is a Killer." << std::endl;
+      //  std::cout << "Player is a Killer." << std::endl;
 
         killer.moveWithDirection(direction, deltaTime, maze);
 
@@ -265,7 +265,7 @@ void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Ve
         gameData["killer"]["position"] = { killer.getPosition().x, killer.getPosition().y };
         gameData["killer"]["moveSpeed"] = killer.moveSpeed;
 
-        std::cerr << "Killer position: " << killer.getPosition().x << ", " << killer.getPosition().y << std::endl;
+  //      std::cerr << "Killer position: " << killer.getPosition().x << ", " << killer.getPosition().y << std::endl;
     }
 
     // Ellenőrizzük az ütközéseket a Survivorok és a Killer között
