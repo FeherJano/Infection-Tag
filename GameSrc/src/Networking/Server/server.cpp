@@ -319,7 +319,7 @@ void CatGameServer::processPlayerInput(const std::string& playerId, const sf::Ve
         currentState = serverStateIdle;
 
         auto now = std::chrono::steady_clock::now();
-        float gameTime = std::chrono::duration_cast<std::chrono::seconds>(now - gameStartTime).count();
+        long long gameTime = std::chrono::duration_cast<std::chrono::seconds>(now - gameStartTime).count();
 
         std::thread([this, gameTime]() {
             
